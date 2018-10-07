@@ -1,0 +1,3 @@
+C:\Users\Admin\Desktop\TylerProject1\NodejsWebApp1\obj\Release\TylerProject1.njsprojResolveAssemblyReference.cache
+C:\Users\Admin\Desktop\TylerProject1\NodejsWebApp1\obj\Release\TylerProject1.njsproj.CoreCompileInputs.cache
+C:\Users\Admin\Desktop\TylerProject1\NodejsWebApp1\bin\Microsoft.NodejsTools.WebRole.dll

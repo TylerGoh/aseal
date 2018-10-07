@@ -1,0 +1,420 @@
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    /* to remove the top and left whitespace */
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow-y: hidden;
+        overflow-x: hidden;
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+/Edge */
+        user-select: none; /* Standard */
+    }
+    /* just to be sure these are full screen*/
+
+    canvas {
+        display: block;
+    }
+    /* To remove the scrollbars */
+</style>
+<head>
+    <style>
+        .button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            bottom:15px;
+            right:15px;
+            position:absolute;
+            color: white;
+            padding: 3px 3px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s; /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .button1 {
+            background-color: white;
+            color: black;
+            border: 2px solid #4CAF50;
+        }
+
+            .button1:hover {
+                background-color: #4CAF50;
+                color: white;
+            }
+    </style>
+</head>
+
+
+    
+
+
+<div id="signDiv">
+	Username: <input id="signDiv-username" type="text"><br>
+	Password: <input id="signDiv-password" type="password">
+	<button id="signDiv-signIn">Sign In</button>
+	<button id="signDiv-signUp">Sign Up</button>
+</div>
+
+<script src="/client/socket.js"></script>
+<div id="gameDiv" style="display:none;">
+	<canvas id="ctx" width="50" height="50" style="border:1px solid #000000;"></canvas>
+
+	<div id="chat-text" 
+         style="left:3px;
+                bottom: 3px;
+                position:absolute;
+                background-color: rgba(178, 0, 255,0.3);
+                width:500px;
+                height:200px;
+                overflow-y:hidden;
+                border:2px solid #000000;">
+	</div>
+
+	<form id="chat-form">
+		<input id="chat-input" type="text" autocomplete="off" 
+               style="left:3px;
+                      bottom: 3px;
+                      position:absolute;
+                      width:504px;
+                      border:2px solid #000000;">
+	</form>
+    <button class="button button1" id="fullscreenbutton" onclick="openFullscreen();">Fullscreen</button>
+
+</div>
+
+<script>
+	// 
+    var user = "";
+    var canvas = document.getElementById("ctx");
+    var fullscreenbutton = document.getElementById("fullscreenbutton")
+    canvas.width = window.innerWidth - 8;
+    canvas.height = window.innerHeight - 2;
+    var WIDTH = window.innerWidth-8;
+    var HEIGHT = window.innerHeight-2;
+    var socket = io();
+    var elem = document.documentElement;
+    var fullscreen = false;
+    var y_shift = 320;
+    function openFullscreen() {
+        if (fullscreen === false) {
+            fullscreen = true;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) { /* Firefox */
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                elem.msRequestFullscreen();
+            }
+           
+        }
+        else
+        {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.mozCancelFullscreen) { /* Firefox */
+                document.mozCancelFullScreen();
+            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) { /* IE/Edge */   
+                document.msExitFullscreen();
+            }
+            fullscreen = false;
+        }
+    }
+
+    window.onload = window.onresize = function () {
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        WIDTH = window.innerWidth;
+        HEIGHT = window.innerHeight;
+    }
+	//sign
+	var signDiv = document.getElementById('signDiv');
+	var signDivUsername = document.getElementById('signDiv-username');
+	var signDivSignIn = document.getElementById('signDiv-signIn');
+	var signDivSignUp = document.getElementById('signDiv-signUp');
+	var signDivPassword = document.getElementById('signDiv-password');
+	
+    signDivSignIn.onclick = function () {
+        if (signDivPassword.value.length == 0)
+            alert("A PASSWORD MUST BE GIVEN")
+        else {
+            socket.emit('signIn', { username: signDivUsername.value, password: signDivPassword.value });
+            user = signDivUsername.value;
+        }
+	}
+    signDivSignUp.onclick = function () {
+        if (signDivPassword.value.length == 0)
+            alert("A PASSWORD MUST BE GIVEN")
+        else
+		socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
+	}
+	socket.on('signInResponse',function(data){
+		if(data.success){
+			signDiv.style.display = 'none';
+            gameDiv.style.display = 'inline-block';
+            chatText.innerHTML += '<div>' + "Welcome back! " + user + '</div>';
+		} else
+			alert("Incorrect username or password.");
+	});
+	socket.on('signUpResponse',function(data){
+		if(data.success){
+			alert("Your account has been created.");
+		} else
+			alert("Username is taken. Be more original...");
+	});
+
+	//chat
+	var chatText = document.getElementById('chat-text');
+	var chatInput = document.getElementById('chat-input');
+	var chatForm = document.getElementById('chat-form');
+	
+	socket.on('addToChat',function(data){
+        chatText.innerHTML += '<div>' + data + '</div>';
+        chatText.scrollTop = chatText.scrollHeight;
+	});
+	socket.on('evalAnswer',function(data){
+		console.log(data);
+	});
+	
+	
+	chatForm.onsubmit = function(e){
+		e.preventDefault();
+		if(chatInput.value[0] === '/')
+			socket.emit('evalServer',chatInput.value.slice(1));
+		else
+			socket.emit('sendMsgToServer',chatInput.value);
+		chatInput.value = '';		
+	}
+	
+	//game
+	var Img = {};
+	Img.player = new Image();
+	Img.player.src = '/client/img/player.png';
+	Img.bullet = new Image();
+	Img.bullet.src = '/client/img/bullet.png';
+	
+	Img.map = {};
+	Img.map['field'] = new Image();
+	Img.map['field'].src = '/client/img/map.png';
+	Img.map['forest'] = new Image();
+    Img.map['forest'].src = '/client/img/map2.png';
+    Img.map['grass'] = new Image();
+    Img.map['grass'].src = '/client/img/grass.jpg';
+	
+	var ctx = document.getElementById("ctx").getContext("2d");
+	ctx.font = '30px Arial';
+	
+	var Player = function(initPack){
+		var self = {};
+		self.id = initPack.id;
+		self.number = initPack.number;
+		self.x = initPack.x;
+		self.y = initPack.y;
+		self.hp = initPack.hp;
+		self.hpMax = initPack.hpMax;
+		self.score = initPack.score;
+        self.map = initPack.map;
+        self.username = initPack.username;
+		
+		self.draw = function(){	
+			if(Player.list[selfId].map !== self.map)
+				return;
+			var x = self.x - Player.list[selfId].x + WIDTH/2;
+			var y = self.y - Player.list[selfId].y + HEIGHT/2;
+			
+			var hpWidth = 30 * self.hp / self.hpMax;
+			ctx.fillStyle = 'red';
+			ctx.fillRect(x - hpWidth/2,y - 40 + y_shift,hpWidth,4);
+			
+			var width = Img.player.width*2;
+			var height = Img.player.height*2;
+			
+			
+			ctx.drawImage(Img.player,
+				0,0,Img.player.width,Img.player.height,
+				x-width/2,y-height/2 +y_shift,width,height);
+			
+			//ctx.fillText(self.score,self.x,self.y-60);
+		}
+		
+		Player.list[self.id] = self;
+		
+		
+		return self;
+	}
+	Player.list = {};
+
+		
+	var Bullet = function(initPack){
+		var self = {};
+		self.id = initPack.id;
+		self.x = initPack.x;
+		self.y = initPack.y;
+		self.map = initPack.map;
+		
+		self.draw = function(){
+			if(Player.list[selfId].map !== self.map)
+				return;
+			var width = Img.bullet.width/2;
+			var height = Img.bullet.height/2;
+			
+			var x = self.x - Player.list[selfId].x + WIDTH/2;
+			var y = self.y - Player.list[selfId].y + HEIGHT/2;
+			
+			ctx.drawImage(Img.bullet,
+				0,0,Img.bullet.width,Img.bullet.height,
+				x-width/2,y-height/2 +y_shift,width,height);
+		}
+		
+		Bullet.list[self.id] = self;		
+		return self;
+	}
+	Bullet.list = {};
+	
+	var selfId = null;
+
+	socket.on('init',function(data){	
+		if(data.selfId)
+			selfId = data.selfId;
+		//{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
+		for(var i = 0 ; i < data.player.length; i++){
+			new Player(data.player[i]);
+		}
+		for(var i = 0 ; i < data.bullet.length; i++){
+			new Bullet(data.bullet[i]);
+		}
+	});
+	
+	socket.on('update',function(data){
+		//{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
+		for(var i = 0 ; i < data.player.length; i++){
+			var pack = data.player[i];
+			var p = Player.list[pack.id];
+			if(p){
+				if(pack.x !== undefined)
+					p.x = pack.x;
+				if(pack.y !== undefined)
+					p.y = pack.y;
+				if(pack.hp !== undefined)
+					p.hp = pack.hp;
+				if(pack.score !== undefined)
+					p.score = pack.score;
+			}
+		}
+		for(var i = 0 ; i < data.bullet.length; i++){
+			var pack = data.bullet[i];
+			var b = Bullet.list[data.bullet[i].id];
+			if(b){
+				if(pack.x !== undefined)
+					b.x = pack.x;
+				if(pack.y !== undefined)
+					b.y = pack.y;
+			}
+		}
+	});
+	
+	socket.on('remove',function(data){
+		//{player:[12323],bullet:[12323,123123]}
+		for(var i = 0 ; i < data.player.length; i++){
+			delete Player.list[data.player[i]];
+		}
+		for(var i = 0 ; i < data.bullet.length; i++){
+			delete Bullet.list[data.bullet[i]];
+		}
+	});
+	
+	setInterval(function(){
+		if(!selfId)
+			return;
+		ctx.clearRect(0,0,WIDTH,HEIGHT);
+		drawMap();
+		drawScore();
+		for(var i in Player.list)
+			Player.list[i].draw();
+		for(var i in Bullet.list)
+			Bullet.list[i].draw();
+	},40);
+	
+	var drawMap = function(){
+        var player = Player.list[selfId];
+		var x = -player.x;
+        var y = -player.y;
+        var multiplier = Math.floor(-x / 1200);
+        console.log(player.x);
+        console.log(multiplier)
+        ctx.drawImage(Img.map[player.map], x, y+ y_shift);
+        ctx.drawImage(Img.map[player.map], x + 1600, y+ y_shift);
+        ctx.drawImage(Img.map[player.map], x - 1600, y+ y_shift);
+
+	}
+	
+	var drawScore = function(){
+		ctx.fillStyle = 'white';
+		ctx.fillText(Player.list[selfId].score,0,30);
+	}
+	
+    document.onkeydown = function (event) {
+
+        if (chatInput != document.activeElement) {
+            // Invalid... Box is empty
+            if (event.keyCode === 68)	//d
+                socket.emit('keyPress', { inputId: 'right', state: true });
+            else if (event.keyCode === 83)	//s
+                socket.emit('keyPress', { inputId: 'down', state: true });
+            else if (event.keyCode === 65) //a
+                socket.emit('keyPress', { inputId: 'left', state: true });
+            else if (event.keyCode === 87) // w
+                socket.emit('keyPress', { inputId: 'up', state: true });
+        }
+        
+    }
+	document.onkeyup = function(event){
+		if(event.keyCode === 68)	//d
+			socket.emit('keyPress',{inputId:'right',state:false});
+		else if(event.keyCode === 83)	//s
+			socket.emit('keyPress',{inputId:'down',state:false});
+		else if(event.keyCode === 65) //a
+			socket.emit('keyPress',{inputId:'left',state:false});
+		else if(event.keyCode === 87) // w
+			socket.emit('keyPress',{inputId:'up',state:false});
+	}
+	
+	document.onmousedown = function(event){
+		socket.emit('keyPress',{inputId:'attack',state:true});
+	}
+	document.onmouseup = function(event){
+		socket.emit('keyPress',{inputId:'attack',state:false});
+	}
+	document.onmousemove = function(event){
+		var x = -(WIDTH/2) + event.clientX - 8;
+		var y = -(HEIGHT/2) + event.clientY - 8 - y_shift;
+		var angle = Math.atan2(y,x) / Math.PI * 180;
+		socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
+	}
+
+    document.oncontextmenu = function (event) {
+        event.preventDefault();
+    }
+	
+	
+</script>
+
+
+
+
+
