@@ -188,7 +188,7 @@
 	
 	socket.on('addToChat',function(data){
         chatText.innerHTML += '<div>' + data + '</div>';
-        chatText.scrollTop = chatText.scrollHeight;
+		chatText.scrollTop = chatText.scrollHeight;
 	});
 	socket.on('evalAnswer',function(data){
 		console.log(data);
@@ -199,9 +199,12 @@
 		e.preventDefault();
 		if(chatInput.value[0] === '/')
 			socket.emit('evalServer',chatInput.value.slice(1));
-		else
+		else if(chatInput.value.length>0)
+		{
+		chatInput.blur();
 			socket.emit('sendMsgToServer',chatInput.value);
-		chatInput.value = '';		
+		chatInput.value = '';	
+		}	
 	}
 	
 	//game
@@ -222,15 +225,32 @@
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
 	
+	function measureText(text, fontSize, fontFamily) {
+  	var w, h, div = measureText.div || document.createElement('div');
+  	div.style.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
+  	div.style.padding = '0';
+  	div.style.margin = '0';
+  	div.style.position = 'absolute';
+  	div.style.visibility = 'hidden';
+  	div.innerHTML = text;
+  	if (!measureText.div) document.body.appendChild(div);
+  	 w = div.clientWidth;
+  	h = div.clientHeight;
+  	 measureText.div = div;
+  	 return {width: w, height: h};
+}
+
 	var	updateCamera = function(){
 		if(Player.list[selfId].x-cam_x > WIDTH*0.7)
 		{
-		  cam_x+= ((((Player.list[selfId].x-cam_x)/(WIDTH*0.7))-1)*15) + 7;
+			cam_x = Player.list[selfId].x - (WIDTH*0.7);
+			
+		  
 		}
 		if(Player.list[selfId].x-cam_x < WIDTH*0.3)
 		{
-			
-			cam_x-=  ((((cam_x-Player.list[selfId].x)/(WIDTH*0.3))+1)*15) + 7;
+			cam_x = Player.list[selfId].x - (WIDTH*0.3);
+		
 		}
 		
 			cam_y = 1300 - HEIGHT;
@@ -246,18 +266,32 @@
 		self.hpMax = initPack.hpMax;
 		self.score = initPack.score;
         self.map = initPack.map;
-        self.username = initPack.username;
+		self.username = initPack.username;
+		var textBuffer = document.createElement('canvas');
+		var text = self.username;
+		var fontSize = 20;
+		var fontFamily = 'Courier-New';
+		var m = measureText(text, fontSize, fontFamily);
+		textBuffer.width = m.width;
+		textBuffer.height = m.height;
+		var temp = textBuffer.getContext('2d');
+		temp.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
+		temp.fillText(text, 0, m.height);
+	
+
+
 		
 		self.draw = function(){	
 			if(Player.list[selfId].map !== self.map)
 				return;
 			var x = self.x - cam_x;
 			var y = self.y - cam_y;
-			
 			var hpWidth = 30 * self.hp / self.hpMax;
 			ctx.fillStyle = 'red';
 			ctx.fillRect(x - hpWidth/2, y - 40,hpWidth,4);
 			
+			ctx.drawImage(textBuffer, x-(m.width/2), y+20);
+
 			var width = Img.player.width*2;
 			var height = Img.player.height*2;
 			
@@ -359,14 +393,14 @@
 		if(!selfId)
 			return;
 		ctx.clearRect(0,0,WIDTH,HEIGHT);
+		updateCamera();
 		drawMap();
 		drawScore();
-		updateCamera();
 		for(var i in Player.list)
 			Player.list[i].draw();
 		for(var i in Bullet.list)
 			Bullet.list[i].draw();
-	},40);
+	},10);
 	
 	var drawMap = function(){
         var player = Player.list[selfId];
@@ -394,8 +428,13 @@
                 socket.emit('keyPress', { inputId: 'down', state: true });
             else if (event.keyCode === 65) //a
                 socket.emit('keyPress', { inputId: 'left', state: true });
-            else if (event.keyCode === 87) // w
-                socket.emit('keyPress', { inputId: 'up', state: true });
+            else if (event.keyCode === 87 || event.charcode === 32) // w
+				socket.emit('keyPress', { inputId: 'up', state: true });
+				else if(event.keyCode === 13)
+			{
+			chatInput.focus();}
+			
+
         }
         
     }
@@ -408,6 +447,7 @@
 			socket.emit('keyPress',{inputId:'left',state:false});
 		else if(event.keyCode === 87) // w
 			socket.emit('keyPress',{inputId:'up',state:false});
+			
 	}
 	
 	document.onmousedown = function(event){

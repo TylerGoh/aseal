@@ -5,7 +5,7 @@ var app = express();
 var serv = require('http').Server(app);
 const client = new MongoClient(url);
 var account;
-var refreshrate = 60;
+var refreshrate = 100;
 
 client.connect(function (err) {
     account = client.db("PassTest").collection("Account");
