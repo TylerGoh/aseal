@@ -109,13 +109,14 @@
 
 	function Lockscreen() {
 		if (lockscreen === true){
-		    document.getElementById("lockscreen").style.backgroundColor= "#4CAF50"			
-            document.getElementById("lockscreen").style.color= "white"
+			document.getElementById("lockscreen").style.backgroundColor=  "white"		
+			document.getElementById("lockscreen").style.color="black"
 			lockscreen = false;	
 		}
 		else{
-			document.getElementById("lockscreen").style.backgroundColor=  "white"		
-            document.getElementById("lockscreen").style.color="black"
+			
+			document.getElementById("lockscreen").style.backgroundColor= "#4CAF50"			
+            document.getElementById("lockscreen").style.color= "white"
 			lockscreen = true;
 		}
 		document.getElementById("lockscreen").blur();
