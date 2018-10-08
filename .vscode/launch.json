@@ -21,7 +21,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Chrome",
-            "url": "http://localhost:1337",
+            "url": "http://localhost:80",
             "webRoot": "${workspaceRoot}/client/src"
           }
 
