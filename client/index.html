@@ -105,7 +105,9 @@
     var socket = io();
     var elem = document.documentElement;
     var fullscreen = false;
-    var y_shift = 320;
+	var cam_y = 0;
+	var cam_x = 0;
+	var signedin = false;
     function openFullscreen() {
         if (fullscreen === false) {
             fullscreen = true;
@@ -154,7 +156,7 @@
             alert("A PASSWORD MUST BE GIVEN")
         else {
             socket.emit('signIn', { username: signDivUsername.value, password: signDivPassword.value });
-            user = signDivUsername.value;
+			user = signDivUsername.value;
         }
 	}
     signDivSignUp.onclick = function () {
@@ -167,7 +169,8 @@
 		if(data.success){
 			signDiv.style.display = 'none';
             gameDiv.style.display = 'inline-block';
-            chatText.innerHTML += '<div>' + "Welcome back! " + user + '</div>';
+			chatText.innerHTML += '<div>' + "Welcome back! " + user + '</div>';
+			signedin = true;
 		} else
 			alert("Incorrect username or password.");
 	});
@@ -219,6 +222,20 @@
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
 	
+	var	updateCamera = function(){
+		if(Player.list[selfId].x-cam_x > WIDTH*0.7)
+		{
+		  cam_x+= ((((Player.list[selfId].x-cam_x)/(WIDTH*0.7))-1)*15) + 7;
+		}
+		if(Player.list[selfId].x-cam_x < WIDTH*0.3)
+		{
+			
+			cam_x-=  ((((cam_x-Player.list[selfId].x)/(WIDTH*0.3))+1)*15) + 7;
+		}
+		
+			cam_y = 1300 - HEIGHT;
+		}
+
 	var Player = function(initPack){
 		var self = {};
 		self.id = initPack.id;
@@ -234,12 +251,12 @@
 		self.draw = function(){	
 			if(Player.list[selfId].map !== self.map)
 				return;
-			var x = self.x - Player.list[selfId].x + WIDTH/2;
-			var y = self.y - Player.list[selfId].y + HEIGHT/2;
+			var x = self.x - cam_x;
+			var y = self.y - cam_y;
 			
 			var hpWidth = 30 * self.hp / self.hpMax;
 			ctx.fillStyle = 'red';
-			ctx.fillRect(x - hpWidth/2, y - 40 + y_shift,hpWidth,4);
+			ctx.fillRect(x - hpWidth/2, y - 40,hpWidth,4);
 			
 			var width = Img.player.width*2;
 			var height = Img.player.height*2;
@@ -247,7 +264,7 @@
 			
 			ctx.drawImage(Img.player,
 				0,0,Img.player.width,Img.player.height,
-				x-width/2,y-height/2 +y_shift,width,height);
+				x-width/2,y-height/2,width,height);
 			
 			//ctx.fillText(self.score,self.x,self.y-60);
 		}
@@ -273,12 +290,12 @@
 			var width = Img.bullet.width/2;
 			var height = Img.bullet.height/2;
 			
-			var x = self.x - Player.list[selfId].x + WIDTH/2;
-			var y = self.y - Player.list[selfId].y + HEIGHT/2;
+			var x = self.x - cam_x;
+			var y = self.y - cam_y;
 			
 			ctx.drawImage(Img.bullet,
 				0,0,Img.bullet.width,Img.bullet.height,
-				x-width/2,y-height/2 +y_shift,width,height);
+				x-width/2,y-height/2,width,height);
 		}
 		
 		Bullet.list[self.id] = self;		
@@ -344,6 +361,7 @@
 		ctx.clearRect(0,0,WIDTH,HEIGHT);
 		drawMap();
 		drawScore();
+		updateCamera();
 		for(var i in Player.list)
 			Player.list[i].draw();
 		for(var i in Bullet.list)
@@ -352,12 +370,12 @@
 	
 	var drawMap = function(){
         var player = Player.list[selfId];
-		var x = -player.x;
-        var y = -player.y;
+		var x = -cam_x;
+        var y = -cam_y;
         var multiplier = Math.floor(-x / 1200);
-        ctx.drawImage(Img.map[player.map], x, y+ y_shift);
-        ctx.drawImage(Img.map[player.map], x + 1600, y+ y_shift);
-        ctx.drawImage(Img.map[player.map], x - 1600, y+ y_shift);
+        ctx.drawImage(Img.map[player.map], x, y);
+        ctx.drawImage(Img.map[player.map], x + 1600, y);
+        ctx.drawImage(Img.map[player.map], x - 1600, y);
 
 	}
 	
@@ -399,10 +417,13 @@
 		socket.emit('keyPress',{inputId:'attack',state:false});
 	}
 	document.onmousemove = function(event){
-		var x = -(WIDTH/2) + event.clientX - 8;
-		var y = -(HEIGHT/2) + event.clientY - 8 - y_shift;
+		if( signedin === true)
+		{
+		var x = cam_x - Player.list[selfId].x  + event.clientX - 8;
+		var y =  cam_y - Player.list[selfId].y + event.clientY - 8;
 		var angle = Math.atan2(y,x) / Math.PI * 180;
 		socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
+		}
 	}
 
     document.oncontextmenu = function (event) {

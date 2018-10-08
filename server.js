@@ -5,6 +5,7 @@ var app = express();
 var serv = require('http').Server(app);
 const client = new MongoClient(url);
 var account;
+var refreshrate = 60;
 
 client.connect(function (err) {
     account = client.db("PassTest").collection("Account");
@@ -46,8 +47,8 @@ var Entity = function (param) {
         self.updatePosition();
     };
     self.updatePosition = function () {
-        self.x += self.spdX;
-        self.y += self.spdY;
+        self.x += self.spdX / refreshrate;
+        self.y += self.spdY / refreshrate;
     };
     self.getDistance = function (pt) {
         return Math.sqrt(Math.pow(self.x - pt.x, 2) + Math.pow(self.y - pt.y, 2));
@@ -57,7 +58,6 @@ var Entity = function (param) {
 
 var Player = function (param) {
     var self = Entity(param);
-    self.jumpSpd = 45;
     self.username = param.username;
     self.number = "" + Math.floor(10 * Math.random());
     self.onGround = false;
@@ -67,11 +67,13 @@ var Player = function (param) {
     self.pressingDown = false;
     self.pressingAttack = false;
     self.mouseAngle = 0;
-    self.maxSpd = 10;
+    self.maxSpd = 300;
+    self.jumpSpd = 1000;
     self.hp = 10;
     self.hpMax = 10;
     self.score = 0;
     self.cooldown = 0;
+    self.gravity = 2000;
     console.log(param.username);
     var super_update = self.update;
     self.update = function () {
@@ -85,8 +87,9 @@ var Player = function (param) {
     };
     self.shootBullet = function (angle) {
         if (self.cooldown === 0) {
-            self.cooldown = 10;
+            self.cooldown = 0.2*refreshrate;
             Bullet({
+                velocity: 1000,
                 parent: self.id,
                 angle: angle,
                 x: self.x,
@@ -101,12 +104,13 @@ var Player = function (param) {
         self.cooldown--;
     };
     self.updateSpd = function () {
-        if (self.y > 600) {
-            self.y = 600;
+        if (self.y > 1000) {
+            self.y = 1000;
             self.spdY = 0;
             self.onGround = true;
         }
-        if (self.onGround === false) self.spdY += 3;
+        //gravity//
+        if (self.onGround === false) self.spdY += self.gravity/refreshrate;
         if (self.pressingRight)
             self.spdX = self.maxSpd;
         else if (self.pressingLeft)
@@ -152,7 +156,7 @@ var Player = function (param) {
 Player.list = {};
 Player.onConnect = function (socket,username) {
     var map = 'grass';
-    console.log(username + "registered");
+    console.log(username + " registered");
     var player = Player({
         id: socket.id,
         map: map,
@@ -211,16 +215,17 @@ Player.update = function () {
 var Bullet = function (param) {
     var self = Entity(param);
     self.id = Math.random();
+    self.velocity = param.velocity;
     self.angle = param.angle;
-    self.spdX = Math.cos(param.angle / 180 * Math.PI) * 30;
-    self.spdY = Math.sin(param.angle / 180 * Math.PI) * 30;
+    self.spdX = Math.cos(param.angle / 180 * Math.PI) * self.velocity;
+    self.spdY = Math.sin(param.angle / 180 * Math.PI) * self.velocity;
     self.parent = param.parent;
 
     self.timer = 0;
     self.toRemove = false;
     var super_update = self.update;
     self.update = function () {
-        if (self.timer++ > 20)
+        if (self.timer++ > 1*refreshrate)
             self.toRemove = true;
         super_update();
 
@@ -376,7 +381,7 @@ setInterval(function () {
     removePack.player = [];
     removePack.bullet = [];
 
-}, 1000 / 25);
+}, 1000 / refreshrate);
 
 
 
