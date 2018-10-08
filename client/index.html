@@ -1,5 +1,5 @@
 <style>
-    * {
+	* {
         margin: 0;
         padding: 0;
     }
@@ -22,15 +22,14 @@
     }
     /* To remove the scrollbars */
 </style>
+
 <head>
-    <style>
-        .button {
-            background-color: #4CAF50; /* Green */
-            border: none;
-            bottom:15px;
-            right:15px;
+	<style>
+		.button {
+            background-color: white; /* Green */
+            border: 2px solid #4CAF50;
             position:absolute;
-            color: white;
+            color: black;
             padding: 3px 3px;
             text-align: center;
             text-decoration: none;
@@ -56,7 +55,7 @@
 </head>
 
 
-    
+
 
 
 <div id="signDiv">
@@ -70,8 +69,7 @@
 <div id="gameDiv" style="display:none;">
 	<canvas id="ctx" width="50" height="50" style="border:1px solid #000000;"></canvas>
 
-	<div id="chat-text" 
-         style="left:3px;
+	<div id="chat-text" style="left:3px;
                 bottom: 3px;
                 position:absolute;
                 background-color: rgba(178, 0, 255,0.3);
@@ -82,100 +80,118 @@
 	</div>
 
 	<form id="chat-form">
-		<input id="chat-input" type="text" autocomplete="off" 
-               style="left:3px;
+		<input id="chat-input" type="text" autocomplete="off" style="left:3px;
                       bottom: 3px;
                       position:absolute;
                       width:504px;
                       border:2px solid #000000;">
 	</form>
-    <button class="button button1" id="fullscreenbutton" onclick="openFullscreen();">Fullscreen</button>
+	<button class="button" style="bottom:15px;right:15px;" id="fullscreen" onclick="openFullscreen();">Fullscreen</button>
+	<button class="button" style="bottom:15px;right:120px;" id="lockscreen" onclick="Lockscreen();">Lockscreen</button>
 
 </div>
 
 <script>
 	// 
-    var user = "";
-    var canvas = document.getElementById("ctx");
-    var fullscreenbutton = document.getElementById("fullscreenbutton")
-    canvas.width = window.innerWidth - 8;
-    canvas.height = window.innerHeight - 2;
-    var WIDTH = window.innerWidth-8;
-    var HEIGHT = window.innerHeight-2;
-    var socket = io();
-    var elem = document.documentElement;
-    var fullscreen = false;
+	var user = "";
+	var canvas = document.getElementById("ctx");
+	canvas.width = window.innerWidth - 8;
+	canvas.height = window.innerHeight - 2;
+	var lockscreen = false;
+	var WIDTH = window.innerWidth - 8;
+	var HEIGHT = window.innerHeight - 2;
+	var socket = io();
+	var elem = document.documentElement;
+	var fullscreen = false;
 	var cam_y = 0;
 	var cam_x = 0;
 	var signedin = false;
-    function openFullscreen() {
-        if (fullscreen === false) {
-            fullscreen = true;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.mozRequestFullScreen) { /* Firefox */
-                elem.mozRequestFullScreen();
-            } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) { /* IE/Edge */
-                elem.msRequestFullscreen();
-            }
-           
-        }
-        else
-        {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.mozCancelFullscreen) { /* Firefox */
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) { /* IE/Edge */   
-                document.msExitFullscreen();
-            }
-            fullscreen = false;
-        }
-    }
 
-    window.onload = window.onresize = function () {
+	function Lockscreen() {
+		if (lockscreen === true){
+		    document.getElementById("lockscreen").style.backgroundColor= "#4CAF50"			
+            document.getElementById("lockscreen").style.color= "white"
+			lockscreen = false;	
+		}
+		else{
+			document.getElementById("lockscreen").style.backgroundColor=  "white"		
+            document.getElementById("lockscreen").style.color="black"
+			lockscreen = true;
+		}
+		document.getElementById("lockscreen").blur();
+	}
+	function openFullscreen() {
+		if (fullscreen === false) {
+			fullscreen = true;
+			document.getElementById("fullscreen").style.backgroundColor= "#4CAF50"			
+            document.getElementById("fullscreen").style.color= "white"	
+			if (elem.requestFullscreen) {
+				elem.requestFullscreen();
+			} else if (elem.mozRequestFullScreen) { /* Firefox */
+				elem.mozRequestFullScreen();
+			} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+				elem.webkitRequestFullscreen();
+			} else if (elem.msRequestFullscreen) { /* IE/Edge */
+				elem.msRequestFullscreen();
+			}
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        WIDTH = window.innerWidth;
-        HEIGHT = window.innerHeight;
-    }
+		}
+		else {
+			document.getElementById("fullscreen").style.backgroundColor=  "white"		
+            document.getElementById("fullscreen").style.color="black"
+			if (document.exitFullscreen) {
+				document.exitFullscreen();
+			} else if (document.mozCancelFullscreen) { /* Firefox */
+				document.mozCancelFullScreen();
+			} else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+				document.webkitExitFullscreen();
+			} else if (document.msExitFullscreen) { /* IE/Edge */
+				document.msExitFullscreen();
+			}
+			fullscreen = false;
+		}
+		document.getElementById("fullscreen").blur();
+	}
+
+	window.onload = window.onresize = function () {
+
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+		WIDTH = window.innerWidth;
+		HEIGHT = window.innerHeight;
+	}
 	//sign
 	var signDiv = document.getElementById('signDiv');
 	var signDivUsername = document.getElementById('signDiv-username');
 	var signDivSignIn = document.getElementById('signDiv-signIn');
 	var signDivSignUp = document.getElementById('signDiv-signUp');
 	var signDivPassword = document.getElementById('signDiv-password');
-	
-    signDivSignIn.onclick = function () {
-        if (signDivPassword.value.length == 0)
-            alert("A PASSWORD MUST BE GIVEN")
-        else {
-            socket.emit('signIn', { username: signDivUsername.value, password: signDivPassword.value });
+
+	signDivSignIn.onclick = function () {
+		if (signDivPassword.value.length == 0)
+			alert("A PASSWORD MUST BE GIVEN")
+		else {
+			socket.emit('signIn', { username: signDivUsername.value, password: signDivPassword.value });
 			user = signDivUsername.value;
-        }
+		}
 	}
-    signDivSignUp.onclick = function () {
-        if (signDivPassword.value.length == 0)
-            alert("A PASSWORD MUST BE GIVEN")
-        else
-		socket.emit('signUp',{username:signDivUsername.value,password:signDivPassword.value});
+	signDivSignUp.onclick = function () {
+		if (signDivPassword.value.length == 0)
+			alert("A PASSWORD MUST BE GIVEN")
+		else
+			socket.emit('signUp', { username: signDivUsername.value, password: signDivPassword.value });
 	}
-	socket.on('signInResponse',function(data){
-		if(data.success){
+	socket.on('signInResponse', function (data) {
+		if (data.success) {
 			signDiv.style.display = 'none';
-            gameDiv.style.display = 'inline-block';
+			gameDiv.style.display = 'inline-block';
 			chatText.innerHTML += '<div>' + "Welcome back! " + user + '</div>';
 			signedin = true;
 		} else
 			alert("Incorrect username or password.");
 	});
-	socket.on('signUpResponse',function(data){
-		if(data.success){
+	socket.on('signUpResponse', function (data) {
+		if (data.success) {
 			alert("Your account has been created.");
 		} else
 			alert("Username is taken. Be more original...");
@@ -185,78 +201,79 @@
 	var chatText = document.getElementById('chat-text');
 	var chatInput = document.getElementById('chat-input');
 	var chatForm = document.getElementById('chat-form');
-	
-	socket.on('addToChat',function(data){
-        chatText.innerHTML += '<div>' + data + '</div>';
+
+	socket.on('addToChat', function (data) {
+		chatText.innerHTML += '<div>' + data + '</div>';
 		chatText.scrollTop = chatText.scrollHeight;
 	});
-	socket.on('evalAnswer',function(data){
+	socket.on('evalAnswer', function (data) {
 		console.log(data);
 	});
-	
-	
-	chatForm.onsubmit = function(e){
+
+
+	chatForm.onsubmit = function (e) {
 		e.preventDefault();
-		if(chatInput.value[0] === '/')
-			socket.emit('evalServer',chatInput.value.slice(1));
-		else if(chatInput.value.length>0)
-		{
-		chatInput.blur();
-			socket.emit('sendMsgToServer',chatInput.value);
-		chatInput.value = '';	
-		}	
+		if (chatInput.value[0] === '/')
+			socket.emit('evalServer', chatInput.value.slice(1));
+		else if (chatInput.value.length > 0) {
+			chatInput.blur();
+			socket.emit('sendMsgToServer', chatInput.value);
+			chatInput.value = '';
+		}
 	}
-	
+
 	//game
 	var Img = {};
 	Img.player = new Image();
 	Img.player.src = '/client/img/player.png';
 	Img.bullet = new Image();
 	Img.bullet.src = '/client/img/bullet.png';
-	
+
 	Img.map = {};
 	Img.map['field'] = new Image();
 	Img.map['field'].src = '/client/img/map.png';
 	Img.map['forest'] = new Image();
-    Img.map['forest'].src = '/client/img/map2.png';
-    Img.map['grass'] = new Image();
-    Img.map['grass'].src = '/client/img/grass.jpg';
-	
+	Img.map['forest'].src = '/client/img/map2.png';
+	Img.map['grass'] = new Image();
+	Img.map['grass'].src = '/client/img/grass.jpg';
+
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
-	
+
 	function measureText(text, fontSize, fontFamily) {
-  	var w, h, div = measureText.div || document.createElement('div');
-  	div.style.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
-  	div.style.padding = '0';
-  	div.style.margin = '0';
-  	div.style.position = 'absolute';
-  	div.style.visibility = 'hidden';
-  	div.innerHTML = text;
-  	if (!measureText.div) document.body.appendChild(div);
-  	 w = div.clientWidth;
-  	h = div.clientHeight;
-  	 measureText.div = div;
-  	 return {width: w, height: h};
-}
+		var w, h, div = measureText.div || document.createElement('div');
+		div.style.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
+		div.style.padding = '0';
+		div.style.margin = '0';
+		div.style.position = 'absolute';
+		div.style.visibility = 'hidden';
+		div.innerHTML = text;
+		if (!measureText.div) document.body.appendChild(div);
+		w = div.clientWidth;
+		h = div.clientHeight;
+		measureText.div = div;
+		return { width: w, height: h };
+	}
 
-	var	updateCamera = function(){
-		if(Player.list[selfId].x-cam_x > WIDTH*0.7)
-		{
-			cam_x = Player.list[selfId].x - (WIDTH*0.7);
-			
-		  
-		}
-		if(Player.list[selfId].x-cam_x < WIDTH*0.3)
-		{
-			cam_x = Player.list[selfId].x - (WIDTH*0.3);
-		
-		}
-		
-			cam_y = 1300 - HEIGHT;
-		}
+	var updateCamera = function () {
+		if (lockscreen === false) {
+			if (Player.list[selfId].x - cam_x > WIDTH * 0.7) {
+				cam_x = Player.list[selfId].x - (WIDTH * 0.7);
 
-	var Player = function(initPack){
+
+			}
+			if (Player.list[selfId].x - cam_x < WIDTH * 0.3) {
+				cam_x = Player.list[selfId].x - (WIDTH * 0.3);
+
+			}
+		}
+		else
+			cam_x = Player.list[selfId].x - WIDTH/2;
+
+		cam_y = 1300 - HEIGHT;
+	}
+
+	var Player = function (initPack) {
 		var self = {};
 		self.id = initPack.id;
 		self.number = initPack.number;
@@ -265,7 +282,7 @@
 		self.hp = initPack.hp;
 		self.hpMax = initPack.hpMax;
 		self.score = initPack.score;
-        self.map = initPack.map;
+		self.map = initPack.map;
 		self.username = initPack.username;
 		var textBuffer = document.createElement('canvas');
 		var text = self.username;
@@ -276,204 +293,201 @@
 		textBuffer.height = m.height;
 		var temp = textBuffer.getContext('2d');
 		temp.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
-		temp.fillText(text, 0, m.height);
-	
+		temp.textBaseline = 'middle';
+		temp.fillText(text, 0, m.height / 2 - 2);
 
 
-		
-		self.draw = function(){	
-			if(Player.list[selfId].map !== self.map)
+
+
+
+
+		self.draw = function () {
+			if (Player.list[selfId].map !== self.map)
 				return;
 			var x = self.x - cam_x;
 			var y = self.y - cam_y;
 			var hpWidth = 30 * self.hp / self.hpMax;
 			ctx.fillStyle = 'red';
-			ctx.fillRect(x - hpWidth/2, y - 40,hpWidth,4);
-			
-			ctx.drawImage(textBuffer, x-(m.width/2), y+20);
+			ctx.fillRect(x - hpWidth / 2, y - 40, hpWidth, 4);
 
-			var width = Img.player.width*2;
-			var height = Img.player.height*2;
-			
-			
+			ctx.drawImage(textBuffer, x - (m.width / 2), y + 20);
+
+			var width = Img.player.width * 2;
+			var height = Img.player.height * 2;
+
+
 			ctx.drawImage(Img.player,
-				0,0,Img.player.width,Img.player.height,
-				x-width/2,y-height/2,width,height);
-			
+				0, 0, Img.player.width, Img.player.height,
+				x - width / 2, y - height / 2, width, height);
+
 			//ctx.fillText(self.score,self.x,self.y-60);
 		}
-		
+
 		Player.list[self.id] = self;
-		
-		
+
+
 		return self;
 	}
 	Player.list = {};
 
-		
-	var Bullet = function(initPack){
+
+	var Bullet = function (initPack) {
 		var self = {};
 		self.id = initPack.id;
 		self.x = initPack.x;
 		self.y = initPack.y;
 		self.map = initPack.map;
-		
-		self.draw = function(){
-			if(Player.list[selfId].map !== self.map)
+
+		self.draw = function () {
+			if (Player.list[selfId].map !== self.map)
 				return;
-			var width = Img.bullet.width/2;
-			var height = Img.bullet.height/2;
-			
+			var width = Img.bullet.width / 2;
+			var height = Img.bullet.height / 2;
+
 			var x = self.x - cam_x;
 			var y = self.y - cam_y;
-			
+
 			ctx.drawImage(Img.bullet,
-				0,0,Img.bullet.width,Img.bullet.height,
-				x-width/2,y-height/2,width,height);
+				0, 0, Img.bullet.width, Img.bullet.height,
+				x - width / 2, y - height / 2, width, height);
 		}
-		
-		Bullet.list[self.id] = self;		
+
+		Bullet.list[self.id] = self;
 		return self;
 	}
 	Bullet.list = {};
-	
+
 	var selfId = null;
 
-	socket.on('init',function(data){	
-		if(data.selfId)
+	socket.on('init', function (data) {
+		if (data.selfId)
 			selfId = data.selfId;
 		//{ player : [{id:123,number:'1',x:0,y:0},{id:1,number:'2',x:0,y:0}], bullet: []}
-		for(var i = 0 ; i < data.player.length; i++){
+		for (var i = 0; i < data.player.length; i++) {
 			new Player(data.player[i]);
 		}
-		for(var i = 0 ; i < data.bullet.length; i++){
+		for (var i = 0; i < data.bullet.length; i++) {
 			new Bullet(data.bullet[i]);
 		}
 	});
-	
-	socket.on('update',function(data){
+
+	socket.on('update', function (data) {
 		//{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
-		for(var i = 0 ; i < data.player.length; i++){
+		for (var i = 0; i < data.player.length; i++) {
 			var pack = data.player[i];
 			var p = Player.list[pack.id];
-			if(p){
-				if(pack.x !== undefined)
+			if (p) {
+				if (pack.x !== undefined)
 					p.x = pack.x;
-				if(pack.y !== undefined)
+				if (pack.y !== undefined)
 					p.y = pack.y;
-				if(pack.hp !== undefined)
+				if (pack.hp !== undefined)
 					p.hp = pack.hp;
-				if(pack.score !== undefined)
+				if (pack.score !== undefined)
 					p.score = pack.score;
 			}
 		}
-		for(var i = 0 ; i < data.bullet.length; i++){
+		for (var i = 0; i < data.bullet.length; i++) {
 			var pack = data.bullet[i];
 			var b = Bullet.list[data.bullet[i].id];
-			if(b){
-				if(pack.x !== undefined)
+			if (b) {
+				if (pack.x !== undefined)
 					b.x = pack.x;
-				if(pack.y !== undefined)
+				if (pack.y !== undefined)
 					b.y = pack.y;
 			}
 		}
 	});
-	
-	socket.on('remove',function(data){
+
+	socket.on('remove', function (data) {
 		//{player:[12323],bullet:[12323,123123]}
-		for(var i = 0 ; i < data.player.length; i++){
+		for (var i = 0; i < data.player.length; i++) {
 			delete Player.list[data.player[i]];
 		}
-		for(var i = 0 ; i < data.bullet.length; i++){
+		for (var i = 0; i < data.bullet.length; i++) {
 			delete Bullet.list[data.bullet[i]];
 		}
 	});
-	
-	setInterval(function(){
-		if(!selfId)
+
+	setInterval(function () {
+		if (!selfId)
 			return;
-		ctx.clearRect(0,0,WIDTH,HEIGHT);
+		ctx.clearRect(0, 0, WIDTH, HEIGHT);
 		updateCamera();
 		drawMap();
 		drawScore();
-		for(var i in Player.list)
+		for (var i in Player.list)
 			Player.list[i].draw();
-		for(var i in Bullet.list)
+		for (var i in Bullet.list)
 			Bullet.list[i].draw();
-	},10);
-	
-	var drawMap = function(){
-        var player = Player.list[selfId];
+	}, 10);
+
+	var drawMap = function () {
+		var player = Player.list[selfId];
 		var x = -cam_x;
-        var y = -cam_y;
-        var multiplier = Math.floor(-x / 1200);
-        ctx.drawImage(Img.map[player.map], x, y);
-        ctx.drawImage(Img.map[player.map], x + 1600, y);
-        ctx.drawImage(Img.map[player.map], x - 1600, y);
+		var y = -cam_y;
+		var multiplier = Math.floor(-x / 1200);
+		ctx.drawImage(Img.map[player.map], x, y);
+		ctx.drawImage(Img.map[player.map], x + 1600, y);
+		ctx.drawImage(Img.map[player.map], x - 1600, y);
 
 	}
-	
-	var drawScore = function(){
+
+	var drawScore = function () {
 		ctx.fillStyle = 'white';
-		ctx.fillText(Player.list[selfId].score,0,30);
+		ctx.fillText(Player.list[selfId].score, 0, 30);
 	}
-	
-    document.onkeydown = function (event) {
 
-        if (chatInput != document.activeElement) {
-            // Invalid... Box is empty
-            if (event.keyCode === 68)	//d
-                socket.emit('keyPress', { inputId: 'right', state: true });
-            else if (event.keyCode === 83)	//s
-                socket.emit('keyPress', { inputId: 'down', state: true });
-            else if (event.keyCode === 65) //a
-                socket.emit('keyPress', { inputId: 'left', state: true });
-            else if (event.keyCode === 87 || event.keyCode === 32) // w
+	document.onkeydown = function (event) {
+
+		if (chatInput != document.activeElement) {
+			// Invalid... Box is empty
+			if (event.keyCode === 68)	//d
+				socket.emit('keyPress', { inputId: 'right', state: true });
+			else if (event.keyCode === 83)	//s
+				socket.emit('keyPress', { inputId: 'down', state: true });
+			else if (event.keyCode === 65) //a
+				socket.emit('keyPress', { inputId: 'left', state: true });
+			else if (event.keyCode === 87 || event.keyCode === 32) // w
 				socket.emit('keyPress', { inputId: 'up', state: true });
-				else if(event.keyCode === 13)
-			{
-			chatInput.focus();}
-			
+			else if (event.keyCode === 13) {
+				chatInput.focus();
+			}
 
-        }
-        
-    }
-	document.onkeyup = function(event){
-		if(event.keyCode === 68)	//d
-			socket.emit('keyPress',{inputId:'right',state:false});
-		else if(event.keyCode === 83)	//s
-			socket.emit('keyPress',{inputId:'down',state:false});
-		else if(event.keyCode === 65) //a
-			socket.emit('keyPress',{inputId:'left',state:false});
-		else if(event.keyCode === 87 || event.keyCode === 32) // w
-			socket.emit('keyPress',{inputId:'up',state:false});
-			
+
+		}
+
 	}
-	
-	document.onmousedown = function(event){
-		socket.emit('keyPress',{inputId:'attack',state:true});
+	document.onkeyup = function (event) {
+		if (event.keyCode === 68)	//d
+			socket.emit('keyPress', { inputId: 'right', state: false });
+		else if (event.keyCode === 83)	//s
+			socket.emit('keyPress', { inputId: 'down', state: false });
+		else if (event.keyCode === 65) //a
+			socket.emit('keyPress', { inputId: 'left', state: false });
+		else if (event.keyCode === 87 || event.keyCode === 32) // w
+			socket.emit('keyPress', { inputId: 'up', state: false });
+
 	}
-	document.onmouseup = function(event){
-		socket.emit('keyPress',{inputId:'attack',state:false});
+
+	document.onmousedown = function (event) {
+		socket.emit('keyPress', { inputId: 'attack', state: true });
 	}
-	document.onmousemove = function(event){
-		if( signedin === true)
-		{
-		var x = cam_x - Player.list[selfId].x  + event.clientX - 8;
-		var y =  cam_y - Player.list[selfId].y + event.clientY - 8;
-		var angle = Math.atan2(y,x) / Math.PI * 180;
-		socket.emit('keyPress',{inputId:'mouseAngle',state:angle});
+	document.onmouseup = function (event) {
+		socket.emit('keyPress', { inputId: 'attack', state: false });
+	}
+	document.onmousemove = function (event) {
+		if (signedin === true) {
+			var x = cam_x - Player.list[selfId].x + event.clientX - 8;
+			var y = cam_y - Player.list[selfId].y + event.clientY - 8;
+			var angle = Math.atan2(y, x) / Math.PI * 180;
+			socket.emit('keyPress', { inputId: 'mouseAngle', state: angle });
 		}
 	}
 
-    document.oncontextmenu = function (event) {
-        event.preventDefault();
-    }
-	
-	
+	document.oncontextmenu = function (event) {
+		event.preventDefault();
+	}
+
+
 </script>
-
-
-
-
-
