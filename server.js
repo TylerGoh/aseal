@@ -172,8 +172,8 @@ var Player = function (param) {
         self.cooldown--;
     };
     self.updateSpd = function () {
-        if (self.y > 1000) {
-            self.y = 1000;
+        if (self.y > 900) {
+            self.y = 900;
             self.spdY = 0;
             self.onGround = true;
         }
