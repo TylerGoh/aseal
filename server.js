@@ -437,7 +437,6 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         delete SOCKET_LIST[socket.id];
-        console.log("Disconnect from " + Player.list[socket.id].username);
         var listCount = 0;  
         for (var i in SOCKET_LIST)
         listCount++;
