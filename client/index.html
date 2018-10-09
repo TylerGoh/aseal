@@ -1,62 +1,6 @@
-<style>
-	* {
-        margin: 0;
-        padding: 0;
-    }
-    /* to remove the top and left whitespace */
-
-    html, body {
-        width: 100%;
-        height: 100%;
-        overflow-y: hidden;
-        overflow-x: hidden;
-        -webkit-user-select: none; /* Safari */
-        -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* IE10+/Edge */
-        user-select: none; /* Standard */
-    }
-    /* just to be sure these are full screen*/
-
-    canvas {
-        display: block;
-    }
-    /* To remove the scrollbars */
-</style>
-
-<head>
-	<style>
-		.button {
-            background-color: white; /* Green */
-            border: 2px solid #4CAF50;
-            position:absolute;
-            color: black;
-            padding: 3px 3px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            -webkit-transition-duration: 0.4s; /* Safari */
-            transition-duration: 0.4s;
-            cursor: pointer;
-        }
-
-        .button1 {
-            background-color: white;
-            color: black;
-            border: 2px solid #4CAF50;
-        }
-
-            .button1:hover {
-                background-color: #4CAF50;
-                color: white;
-            }
-    </style>
-</head>
-
-
-
-
+<!-- #region initialization -->
+<link rel="stylesheet" type="text/css" href="/client/style.css">
+<link rel="shortcut icon" href="about:blank">
 
 <div id="signDiv">
 	Username: <input id="signDiv-username" type="text"><br>
@@ -69,63 +13,55 @@
 <div id="gameDiv" style="display:none;">
 	<canvas id="ctx" width="50" height="50" style="border:1px solid #000000;"></canvas>
 
-	<div id="chat-text" style="left:3px;
-                bottom: 3px;
-                position:absolute;
-                background-color: rgba(178, 0, 255,0.3);
-                width:500px;
-                height:200px;
-                overflow-y:hidden;
-                border:2px solid #000000;">
-	</div>
+	<div id="chat-text" class="chatText"></div>
 
 	<form id="chat-form">
-		<input id="chat-input" type="text" autocomplete="off" style="left:3px;
-                      bottom: 3px;
-                      position:absolute;
-                      width:504px;
-                      border:2px solid #000000;">
+		<input id="chat-input" type="text" autocomplete="off" class="chatForm">
 	</form>
 	<button class="button" style="bottom:15px;right:15px;" id="fullscreen" onclick="openFullscreen();">Fullscreen</button>
 	<button class="button" style="bottom:15px;right:120px;" id="lockscreen" onclick="Lockscreen();">Lockscreen</button>
 
 </div>
+<!-- #endregion -->
 
 <script>
-	// 
+
+	//#region Website Design
 	var user = "";
 	var canvas = document.getElementById("ctx");
 	canvas.width = window.innerWidth - 8;
 	canvas.height = window.innerHeight - 2;
-	var lockscreen = false;
+	var fullscreen = document.getElementById("fullscreen");
+	var b_lockscreen = document.getElementById("lockscreen");
 	var WIDTH = window.innerWidth - 8;
 	var HEIGHT = window.innerHeight - 2;
 	var socket = io();
 	var elem = document.documentElement;
-	var fullscreen = false;
+	var togglescreen = false;
 	var cam_y = 0;
 	var cam_x = 0;
 	var signedin = false;
+	var refreshrate = 100;
 
 	function Lockscreen() {
 		if (lockscreen === true){
-			document.getElementById("lockscreen").style.backgroundColor=  "white"		
-			document.getElementById("lockscreen").style.color="black"
+			b_lockscreen.style.backgroundColor=  "white"		
+			b_lockscreen.style.color="black"
 			lockscreen = false;	
 		}
 		else{
 			
-			document.getElementById("lockscreen").style.backgroundColor= "#4CAF50"			
-            document.getElementById("lockscreen").style.color= "white"
+			b_lockscreen.style.backgroundColor= "#4CAF50"			
+            b_lockscreen.style.color= "white"
 			lockscreen = true;
 		}
-		document.getElementById("lockscreen").blur();
+		b_lockscreen.blur();
 	}
 	function openFullscreen() {
-		if (fullscreen === false) {
-			fullscreen = true;
-			document.getElementById("fullscreen").style.backgroundColor= "#4CAF50"			
-            document.getElementById("fullscreen").style.color= "white"	
+		if (togglescreen === false) {
+			togglescreen = true;
+			fullscreen.style.backgroundColor= "#4CAF50"			
+            fullscreen.style.color= "white"	
 			if (elem.requestFullscreen) {
 				elem.requestFullscreen();
 			} else if (elem.mozRequestFullScreen) { /* Firefox */
@@ -138,8 +74,8 @@
 
 		}
 		else {
-			document.getElementById("fullscreen").style.backgroundColor=  "white"		
-            document.getElementById("fullscreen").style.color="black"
+			fullscreen.style.backgroundColor=  "white"		
+            fullscreen.style.color="black"
 			if (document.exitFullscreen) {
 				document.exitFullscreen();
 			} else if (document.mozCancelFullscreen) { /* Firefox */
@@ -149,9 +85,9 @@
 			} else if (document.msExitFullscreen) { /* IE/Edge */
 				document.msExitFullscreen();
 			}
-			fullscreen = false;
+			togglescreen = false;
 		}
-		document.getElementById("fullscreen").blur();
+		fullscreen.blur();
 	}
 
 	window.onload = window.onresize = function () {
@@ -161,7 +97,9 @@
 		WIDTH = window.innerWidth;
 		HEIGHT = window.innerHeight;
 	}
-	//sign
+	//#endregion
+
+	//#region Sign in
 	var signDiv = document.getElementById('signDiv');
 	var signDivUsername = document.getElementById('signDiv-username');
 	var signDivSignIn = document.getElementById('signDiv-signIn');
@@ -197,8 +135,9 @@
 		} else
 			alert("Username is taken. Be more original...");
 	});
+	//#endregion
 
-	//chat
+	//#region Chat
 	var chatText = document.getElementById('chat-text');
 	var chatInput = document.getElementById('chat-input');
 	var chatForm = document.getElementById('chat-form');
@@ -222,11 +161,14 @@
 			chatInput.value = '';
 		}
 	}
+ //#endregion
 
-	//game
+	//#region Resource collection
 	var Img = {};
-	Img.player = new Image();
-	Img.player.src = '/client/img/player.png';
+	Img.player_left = new Image();
+	Img.player_left.src = '/client/img/player-left.png';
+	Img.player_right = new Image();
+	Img.player_right.src = '/client/img/player-right.png';
 	Img.bullet = new Image();
 	Img.bullet.src = '/client/img/bullet.png';
 
@@ -237,7 +179,9 @@
 	Img.map['forest'].src = '/client/img/map2.png';
 	Img.map['grass'] = new Image();
 	Img.map['grass'].src = '/client/img/grass.jpg';
+ //#endregion
 
+ 	//#region Text Caching
 	var ctx = document.getElementById("ctx").getContext("2d");
 	ctx.font = '30px Arial';
 
@@ -255,8 +199,10 @@
 		measureText.div = div;
 		return { width: w, height: h };
 	}
+ //#endregion
 
-	var updateCamera = function () {
+	//#region Camera Movement	
+ var updateCamera = function () {
 		if (lockscreen === false) {
 			if (Player.list[selfId].x - cam_x > WIDTH * 0.7) {
 				cam_x = Player.list[selfId].x - (WIDTH * 0.7);
@@ -273,7 +219,9 @@
 
 		cam_y = 1300 - HEIGHT;
 	}
+ //#endregion
 
+	//#region Object Player Initialization
 	var Player = function (initPack) {
 		var self = {};
 		self.id = initPack.id;
@@ -285,6 +233,15 @@
 		self.score = initPack.score;
 		self.map = initPack.map;
 		self.username = initPack.username;
+		self.counter = 0;
+		self.frame = 0;
+		self.animation = "idle";
+		self.startFrame = 1.0;
+		self.endFrame = 4.0;
+		self.frameTime = 100;
+		self.direction = "left"
+		self.animationOld = "idle"
+		self.combo = 0;
 		var textBuffer = document.createElement('canvas');
 		var text = self.username;
 		var fontSize = 20;
@@ -296,30 +253,85 @@
 		temp.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
 		temp.textBaseline = 'middle';
 		temp.fillText(text, 0, m.height / 2 - 2);
+		//#endregion
+	
+	//#region Object Player Animation
+		self.animationMiddle =function (startFrames,endFrames,frameTimes){
+			self.counter = 0;
+			self.startFrame = startFrames;
+			self.endFrame = endFrames;
+			self.frameTime = frameTimes;
+		}
 
-
-
-
-
+		self.animationHandler = function(){
+		if(self.animation != self.animationOld || self.animation == "attack")
+		{
+		switch(self.animation)
+		{
+		case("idle"):
+		self.animationMiddle(0,4,175);
+		break;
+		case("walking"):
+		self.animationMiddle(8,14,100);
+		break;
+		case("jumping"):
+		self.animationMiddle(16,22,100);
+		break;
+		case("falling"):
+		self.animationMiddle(22,24,100);
+		break;
+		case("attack"):
+		self.animationMiddle(97+self.combo,97+self.combo,33);
+		break;
+		}
+		self.animationOld = self.animation;
+		}
+	}
+		//#endregion
+	
+	//#region Object Player Update and Drawing
+		self.update= function(){
+			self.animationHandler();
+			self.draw();
+		}
 
 		self.draw = function () {
+			if(self.endFrame != self.startFrame)
+			{
+			self.counter = (self.counter+((1000/refreshrate)/self.frameTime))%(self.endFrame-self.startFrame);
+			self.frame = self.startFrame + self.counter;
+			}
+			else
+			{
+			self.frame = self.startFrame;
+			}
 			if (Player.list[selfId].map !== self.map)
 				return;
 			var x = self.x - cam_x;
 			var y = self.y - cam_y;
+			//hp bar
 			var hpWidth = 30 * self.hp / self.hpMax;
 			ctx.fillStyle = 'red';
 			ctx.fillRect(x - hpWidth / 2, y - 40, hpWidth, 4);
-
-			ctx.drawImage(textBuffer, x - (m.width / 2), y + 20);
-
-			var width = Img.player.width * 2;
-			var height = Img.player.height * 2;
-
-
-			ctx.drawImage(Img.player,
-				0, 0, Img.player.width, Img.player.height,
-				x - width / 2, y - height / 2, width, height);
+			//name
+			ctx.drawImage(textBuffer, x - (m.width / 2), y + 40);
+			//sprite
+			var framesPerRow = 7;
+			var numberOfRows= 16;
+			var width = 50;
+			var height = 37;
+			var col = Math.floor(self.frame/framesPerRow);
+			var row = Math.floor(self.frame%framesPerRow);
+			if(self.direction == "left"){
+			ctx.drawImage(Img.player_left,
+			(framesPerRow-row-1)*width , col*height, width, height,	
+				x - width, y - height, width*2.2, height*2.2);
+			}
+			else{
+				ctx.drawImage(Img.player_right,
+				row*width , col*height, width, height,	
+				x - width-4, y - height, width*2.2, height*2.2);
+			}
 
 			//ctx.fillText(self.score,self.x,self.y-60);
 		}
@@ -331,7 +343,9 @@
 	}
 	Player.list = {};
 
+ 	//#endregion
 
+	//#region Object bullet
 	var Bullet = function (initPack) {
 		var self = {};
 		self.id = initPack.id;
@@ -357,7 +371,9 @@
 		return self;
 	}
 	Bullet.list = {};
+ //#endregion
 
+ 	//#region Packets
 	var selfId = null;
 
 	socket.on('init', function (data) {
@@ -386,6 +402,13 @@
 					p.hp = pack.hp;
 				if (pack.score !== undefined)
 					p.score = pack.score;
+				if (pack.animation !== undefined)
+					p.animation = pack.animation;
+				if (pack.direction !== undefined)
+					p.direction = pack.direction;
+				if (pack.combo !== undefined)
+					p.combo = pack.combo;
+					
 			}
 		}
 		for (var i = 0; i < data.bullet.length; i++) {
@@ -409,7 +432,9 @@
 			delete Bullet.list[data.bullet[i]];
 		}
 	});
+ //#endregion
 
+	//#region Update
 	setInterval(function () {
 		if (!selfId)
 			return;
@@ -418,11 +443,13 @@
 		drawMap();
 		drawScore();
 		for (var i in Player.list)
-			Player.list[i].draw();
+			Player.list[i].update();
 		for (var i in Bullet.list)
 			Bullet.list[i].draw();
-	}, 10);
+	}, 1000/refreshrate);
+ //#endregion
 
+ 	//#region Map drawing
 	var drawMap = function () {
 		var player = Player.list[selfId];
 		var x = -cam_x;
@@ -433,12 +460,16 @@
 		ctx.drawImage(Img.map[player.map], x - 1600, y);
 
 	}
+ 	//#endregion 
 
+	//#region draw Score
 	var drawScore = function () {
 		ctx.fillStyle = 'white';
 		ctx.fillText(Player.list[selfId].score, 0, 30);
 	}
+	 //#endregion
 
+	//#region KeyInput
 	document.onkeydown = function (event) {
 
 		if (chatInput != document.activeElement) {
@@ -459,6 +490,7 @@
 		}
 
 	}
+	 
 	document.onkeyup = function (event) {
 		if (event.keyCode === 68)	//d
 			socket.emit('keyPress', { inputId: 'right', state: false });
@@ -490,5 +522,5 @@
 		event.preventDefault();
 	}
 
-
+ //#endregion
 </script>

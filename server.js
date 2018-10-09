@@ -1,9 +1,10 @@
+//#region initialization
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb+srv://tyler:tyler@testproject-h7nqf.mongodb.net/test?retryWrites=true";
 var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
-const client = new MongoClient(url);
+const client = new MongoClient(url,{ useNewUrlParser: true });
 var account;
 var refreshrate = 100;
 
@@ -22,7 +23,10 @@ serv.listen(80);
 console.log("Server started.");
 
 var SOCKET_LIST = {};
+//#endregion 
 
+
+//#region Object Entity
 var Entity = function (param) {
     var self = {
         x: 250,
@@ -55,7 +59,10 @@ var Entity = function (param) {
     };
     return self;
 };
+//#endregion
 
+
+//#region Player:Entity
 var Player = function (param) {
     var self = Entity(param);
     self.username = param.username;
@@ -69,22 +76,47 @@ var Player = function (param) {
     self.mouseAngle = 0;
     self.maxSpd = 300;
     self.jumpSpd = 1000;
+    self.direction = "left";
+    self.animation = "";
     self.hp = 10;
     self.hpMax = 10;
     self.score = 0;
     self.cooldown = 0;
     self.gravity = 2000;
-    console.log(param.username);
+    self.combo = 0;
+    self.queueAttack = false;
+    self.isWalking = false;
+    self.isAttacking = false;
     var super_update = self.update;
     self.update = function () {
         self.updateSpd();
         self.updateCd();
+        self.updateAnim();
         super_update();
 
-        if (self.pressingAttack) {
-            self.shootBullet(self.mouseAngle);
+        if (self.pressingAttack || self.queueAttack) {
+            self.basicattack();
+            self.isAttacking = true;
+        }
+        else if(self.cooldown == 0)
+        {
+        self.combo = 0;
+        self.isAttacking = false;
         }
     };
+
+    self.basicattack = function(){
+        if(self.cooldown === 0)
+        {
+            self.cooldown = 0.1*refreshrate;
+            self.combo = (self.combo+1)%12;
+            self.animation = "attack";
+            self.queueAttack = false;
+        }
+        else
+        self.queueAttack=true;
+
+    }
     self.shootBullet = function (angle) {
         if (self.cooldown === 0) {
             self.cooldown = 0.2*refreshrate;
@@ -99,6 +131,42 @@ var Player = function (param) {
         }
     };
 
+    self.updateAnim =function(){
+        if(self.spdX>0)
+        {
+            self.direction = "right";
+        }
+        else if(self.spdX<0){
+            self.direction = "left";
+        }
+        if(self.isAttacking == false)
+        {
+        if(self.spdX>0)
+        {
+            self.isWalking = true;
+        }
+        else if(self.spdX<0){
+            self.direction = "left";
+        }
+        else
+        {
+            self.isWalking=false;
+            self.animation="idle";
+        }
+        if (self.spdY<0)
+        {
+            self.animation="jumping"
+        }
+        if (self.spdY>0)
+        {
+            self.animation="falling"
+        }
+        if(self.isWalking==true && self.onGround==true)
+        {
+            self.animation="walking";
+        }
+    }
+    }
     self.updateCd = function () {
         if(self.cooldown > 0)
         self.cooldown--;
@@ -134,18 +202,26 @@ var Player = function (param) {
             hp: self.hp,
             hpMax: self.hpMax,
             score: self.score,
+            animation:self.animation,
+            direction:self.direction,
             map: self.map,
-            username: self.username
+            username: self.username,
+            combo:self.combo
         };
     };
     self.getUpdatePack = function () {
         return {
             id: self.id,
+            animation:self.animation,
+            direction:self.direction,
             x: self.x,
             y: self.y,
             hp: self.hp,
-            score: self.score
+            score: self.score,
+            combo:self.combo
+            
         };
+        
     };
 
     Player.list[self.id] = self;
@@ -153,10 +229,18 @@ var Player = function (param) {
     initPack.player.push(self.getInitPack());
     return self;
 };
+ //#endregion
+
+
+//#region Player Data Input
 Player.list = {};
 Player.onConnect = function (socket,username) {
+    var listCount = 0;  
+    for (var i in SOCKET_LIST)
+    listCount++;
+    console.log(listCount + " people currently in server");
+    //checking
     var map = 'grass';
-    console.log(username + " registered");
     var player = Player({
         id: socket.id,
         map: map,
@@ -210,8 +294,10 @@ Player.update = function () {
     }
     return pack;
 };
+//#endregion
 
 
+//#region Object Bullet
 var Bullet = function (param) {
     var self = Entity(param);
     self.id = Math.random();
@@ -268,6 +354,10 @@ var Bullet = function (param) {
     initPack.bullet.push(self.getInitPack());
     return self;
 };
+//#endregion
+
+
+//#region Bullet Packet
 Bullet.list = {};
 
 Bullet.update = function () {
@@ -290,9 +380,10 @@ Bullet.getAllInitPack = function () {
         bullets.push(Bullet.list[i].getInitPack());
     return bullets;
 };
+//#endregion
 
-var DEBUG = true;
 
+//#region Login and Logout
 var isValidPassword = function (data, cb) {
     account.find({ username: data.username, password: data.password }).toArray(function (err, res) {
         if (res.length > 0)
@@ -321,9 +412,9 @@ io.sockets.on('connection', function (socket) {
     SOCKET_LIST[socket.id] = socket;
 
     socket.on('signIn', function (data) {
-        console.log('Sign in request');
         isValidPassword(data, function (res) {
             if (res) {
+                console.log("Sign in from " + data.username);
                 Player.onConnect(socket, data.username);
                 socket.emit('signInResponse', { success: true });
             } else {
@@ -346,15 +437,13 @@ io.sockets.on('connection', function (socket) {
 
     socket.on('disconnect', function () {
         delete SOCKET_LIST[socket.id];
+        console.log("Disconnect from " + Player.list[socket.id].username);
+        var listCount = 0;  
+        for (var i in SOCKET_LIST)
+        listCount++;
+        console.log(listCount + " people currently in server");
         Player.onDisconnect(socket);
-    });
-
-
-    socket.on('evalServer', function (data) {
-        if (!DEBUG)
-            return;
-        var res = eval(data);
-        socket.emit('evalAnswer', res);
+        
     });
 
 
@@ -363,8 +452,10 @@ io.sockets.on('connection', function (socket) {
 
 var initPack = { player: [], bullet: [] };
 var removePack = { player: [], bullet: [] };
+//#endregion
 
 
+//#region Pulse
 setInterval(function () {
     var pack = {
         player: Player.update(),
@@ -382,7 +473,7 @@ setInterval(function () {
     removePack.bullet = [];
 
 }, 1000 / refreshrate);
-
+//#endregion
 
 
 
