@@ -2,11 +2,14 @@
 <link rel="stylesheet" type="text/css" href="/client/style.css">
 <link rel="shortcut icon" href="about:blank">
 
-<div id="signDiv">
-	Username: <input id="signDiv-username" type="text"><br>
-	Password: <input id="signDiv-password" type="password">
-	<button id="signDiv-signIn">Sign In</button>
-	<button id="signDiv-signUp">Sign Up</button>
+<div id="signDiv" class="login-box">
+	<h1>Login</h1>
+	<div id="warning-text">Hello</div>
+	<input id="signDiv-username" class="login-chat-box" placeholder="Username" type="text"><br>
+	<input id="signDiv-password" class="login-chat-box" placeholder="Password" type="password">
+	<button id="signDiv-signIn" class="login-button">Sign In</button>
+	<button id="signDiv-signUp" class="login-button">Sign Up</button>
+	
 </div>
 
 <script src="/client/socket.js"></script>
@@ -28,6 +31,7 @@
 
 	//#region Website Design
 	var user = "";
+	var warning = document.getElementById("warning-text");
 	var canvas = document.getElementById("ctx");
 	canvas.width = window.innerWidth - 8;
 	canvas.height = window.innerHeight - 2;
@@ -42,7 +46,9 @@
 	var cam_x = 0;
 	var signedin = false;
 	var refreshrate = 100;
-
+	function Warning(text){
+		warning.innerHTML = '<div>' + text + '</div>';
+	}
 	function Lockscreen() {
 		if (lockscreen === true){
 			b_lockscreen.style.backgroundColor=  "white"		
@@ -108,7 +114,7 @@
 
 	signDivSignIn.onclick = function () {
 		if (signDivPassword.value.length == 0)
-			alert("A PASSWORD MUST BE GIVEN")
+			Warning("Give a password!");
 		else {
 			socket.emit('signIn', { username: signDivUsername.value, password: signDivPassword.value });
 			user = signDivUsername.value;
@@ -116,7 +122,7 @@
 	}
 	signDivSignUp.onclick = function () {
 		if (signDivPassword.value.length == 0)
-			alert("A PASSWORD MUST BE GIVEN")
+			Warning("Give a password!");
 		else
 			socket.emit('signUp', { username: signDivUsername.value, password: signDivPassword.value });
 	}
@@ -127,13 +133,13 @@
 			chatText.innerHTML += '<div>' + "Welcome back! " + user + '</div>';
 			signedin = true;
 		} else
-			alert("Incorrect username or password.");
+		Warning("Double-check!");
 	});
 	socket.on('signUpResponse', function (data) {
 		if (data.success) {
-			alert("Your account has been created.");
+			Warning("Hooray! Successful creation!");
 		} else
-			alert("Username is taken. Be more original...");
+			Warning("Oh no! The username is taken");
 	});
 	//#endregion
 
