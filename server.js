@@ -280,8 +280,7 @@ var Player = function (param) {
             y: self.y,
             hp: self.hp,
             score: self.score,
-            combo:self.combo,
-            death:self.death
+            combo:self.combo
             
         };
         
