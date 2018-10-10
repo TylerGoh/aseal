@@ -94,24 +94,6 @@ var Player = function (param) {
     self.stunDuration = 0;
     var super_update = self.update;
     //#endregion
-    //#region Player:Update
-    self.update = function () {
-        self.updateSpd();
-        self.updateCd();
-        self.updateAnim();
-        super_update();
-
-        if (self.pressingAttack || self.queueAttack) {
-            self.basicattack();
-            self.isAttacking = true;
-        }
-        else if(self.cooldown == 0)
-        {
-        self.combo = 0;
-        self.isAttacking = false;
-        }
-    };
-    //#endregion
     //#region Player:Attack
     self.basicattack = function(){
         if(self.cooldown === 0)
@@ -120,9 +102,9 @@ var Player = function (param) {
             self.combo = (self.combo+1)%12;
             self.animation = "attack";
             self.queueAttack = false;
-            if(self.combo == 7 && self.onGround == false)
+            if(self.combo == 6 && self.onGround == false)
             {
-            self.spdY=1000;
+            self.spdY=1300;
             self.slam=true;
             }
             if(self.combo % 3 == 2)
@@ -138,6 +120,7 @@ var Player = function (param) {
             var p = Player.list[i];
             if (self.map === p.map && self.getCollision(p) === true && self.id !== p.id) {
                 p.hp -= 1;
+                
                 var temp = false;
                 if(self.combo == 8 && self.slam==false)
                 temp = true
@@ -224,6 +207,23 @@ var Player = function (param) {
     }
     //#endregion
     //#region Update
+    self.update = function () {
+        self.updateSpd();
+        self.updateCd();
+        self.updateAnim();
+        super_update();
+
+        if (self.pressingAttack || self.queueAttack) {
+            self.basicattack();
+            self.isAttacking = true;
+        }
+        else if(self.cooldown == 0)
+        {
+        self.combo = 0;
+        self.isAttacking = false;
+        }
+    };
+    
     self.updateCd = function () {
         if(self.cooldown > 0)
         self.cooldown--;
@@ -246,7 +246,7 @@ var Player = function (param) {
             self.spdX = self.maxSpd;
         else if (self.pressingLeft && self.stunDuration == 0)
             self.spdX = -self.maxSpd;
-        else if (self.stunDuration == 0)
+        else if (self.stunDuration == 0 && self.onGround == true)
             self.spdX = 0;
         if (self.pressingUp && self.onGround && self.stunDuration == 0)
         { 
@@ -280,7 +280,8 @@ var Player = function (param) {
             y: self.y,
             hp: self.hp,
             score: self.score,
-            combo:self.combo
+            combo:self.combo,
+            death:self.death
             
         };
         
