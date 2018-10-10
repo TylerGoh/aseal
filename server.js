@@ -90,6 +90,7 @@ var Player = function (param) {
     self.queueAttack = false;
     self.isWalking = false;
     self.isAttacking = false;
+    self.slam=false;
     self.stunDuration = 0;
     var super_update = self.update;
     //#endregion
@@ -119,6 +120,11 @@ var Player = function (param) {
             self.combo = (self.combo+1)%12;
             self.animation = "attack";
             self.queueAttack = false;
+            if(self.combo == 7 && self.onGround == false)
+            {
+            self.spdY=1000;
+            self.slam=true;
+            }
             if(self.combo % 3 == 2)
             self.damage();
         }
@@ -132,12 +138,16 @@ var Player = function (param) {
             var p = Player.list[i];
             if (self.map === p.map && self.getCollision(p) === true && self.id !== p.id) {
                 p.hp -= 1;
-                if(self.combo == 8)
+                var temp = false;
+                if(self.combo == 8 && self.slam==false)
+                temp = true
+                if(self.slam==true || temp==true)
                 {
                 p.onGround = false;
                 p.spdX=500*self.direction
                 p.spdY=-1200
                 p.stunDuration= 0.5*refreshrate;
+                self.slam=false;
                 }
                 if (p.hp <= 0) {
                     p.hp = p.hpMax;
@@ -225,6 +235,10 @@ var Player = function (param) {
             self.y = 900;
             self.spdY = 0;
             self.onGround = true;
+            if(self.slam == true)
+            {
+                self.damage();
+            }
         }
         //gravity//
         if (self.onGround === false) self.spdY += self.gravity/refreshrate;
