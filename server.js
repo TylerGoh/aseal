@@ -29,6 +29,8 @@ var SOCKET_LIST = {};
 //#region Object Entity
 var Entity = function (param) {
     var self = {
+        width:50*2.2,
+        height:37*2.2,
         x: 250,
         y: 250,
         spdX: 0,
@@ -64,6 +66,7 @@ var Entity = function (param) {
 
 //#region Player:Entity
 var Player = function (param) {
+    //#region Player:Initialization
     var self = Entity(param);
     self.username = param.username;
     self.number = "" + Math.floor(10 * Math.random());
@@ -76,7 +79,7 @@ var Player = function (param) {
     self.mouseAngle = 0;
     self.maxSpd = 300;
     self.jumpSpd = 1000;
-    self.direction = "left";
+    self.direction = 1;
     self.animation = "";
     self.hp = 10;
     self.hpMax = 10;
@@ -87,7 +90,10 @@ var Player = function (param) {
     self.queueAttack = false;
     self.isWalking = false;
     self.isAttacking = false;
+    self.stunDuration = 0;
     var super_update = self.update;
+    //#endregion
+    //#region Player:Update
     self.update = function () {
         self.updateSpd();
         self.updateCd();
@@ -104,7 +110,8 @@ var Player = function (param) {
         self.isAttacking = false;
         }
     };
-
+    //#endregion
+    //#region Player:Attack
     self.basicattack = function(){
         if(self.cooldown === 0)
         {
@@ -112,11 +119,43 @@ var Player = function (param) {
             self.combo = (self.combo+1)%12;
             self.animation = "attack";
             self.queueAttack = false;
+            if(self.combo % 3 == 2)
+            self.damage();
         }
         else
         self.queueAttack=true;
 
     }
+    self.damage = function(){
+        console.log(self.combo);
+        for (var i in Player.list) {
+            var p = Player.list[i];
+            if (self.map === p.map && self.getCollision(p) === true && self.id !== p.id) {
+                p.hp -= 1;
+                if(self.combo == 8)
+                {
+                p.onGround = false;
+                p.spdX=500*self.direction
+                p.spdY=-1200
+                p.stunDuration= 0.5*refreshrate;
+                }
+                if (p.hp <= 0) {
+                    p.hp = p.hpMax;
+                    p.x = Math.random() * 500;
+                    p.y = Math.random() * 500;
+                    p.onGround = false;
+                }
+            }
+    }
+}
+    self.getCollision =function(pt){
+        if((pt.y + pt.height/2) > self.y && (pt.y - pt.height)<self.y && (pt.x - self.x)*self.direction < 70 && (pt.x - self.x)*self.direction > -20)
+        return true;
+        else
+        return false;
+    }
+    //#endregion
+    //#region Player:Bullet
     self.shootBullet = function (angle) {
         if (self.cooldown === 0) {
             self.cooldown = 0.2*refreshrate;
@@ -130,14 +169,16 @@ var Player = function (param) {
             });
         }
     };
+    //#endregion
+    //#region Animation 
 
     self.updateAnim =function(){
-        if(self.spdX>0)
+        if(self.spdX>0 && self.stunDuration == 0)
         {
-            self.direction = "right";
+            self.direction = 1;
         }
-        else if(self.spdX<0){
-            self.direction = "left";
+        else if(self.spdX<0 && self.stunDuration == 0){
+            self.direction = -1;
         }
         if(self.isAttacking == false)
         {
@@ -146,7 +187,7 @@ var Player = function (param) {
             self.isWalking = true;
         }
         else if(self.spdX<0){
-            self.direction = "left";
+            self.isWalking = true;
         }
         else
         {
@@ -165,11 +206,19 @@ var Player = function (param) {
         {
             self.animation="walking";
         }
+        if(self.stunDuration>0)
+        {
+            self.animation="idle";
+        }
     }
     }
+    //#endregion
+    //#region Update
     self.updateCd = function () {
         if(self.cooldown > 0)
         self.cooldown--;
+        if(self.stunDuration > 0)
+        self.stunDuration--;
     };
     self.updateSpd = function () {
         if (self.y > 900) {
@@ -179,14 +228,13 @@ var Player = function (param) {
         }
         //gravity//
         if (self.onGround === false) self.spdY += self.gravity/refreshrate;
-        if (self.pressingRight)
+        if (self.pressingRight && self.stunDuration == 0)
             self.spdX = self.maxSpd;
-        else if (self.pressingLeft)
+        else if (self.pressingLeft && self.stunDuration == 0)
             self.spdX = -self.maxSpd;
-        else
+        else if (self.stunDuration == 0)
             self.spdX = 0;
-
-        if (self.pressingUp && self.onGround)
+        if (self.pressingUp && self.onGround && self.stunDuration == 0)
         { 
         self.spdY = -self.jumpSpd;
         self.onGround = false;
@@ -228,6 +276,7 @@ var Player = function (param) {
 
     initPack.player.push(self.getInitPack());
     return self;
+    //#endregion
 };
  //#endregion
 
@@ -327,7 +376,6 @@ var Bullet = function (param) {
                     p.hp = p.hpMax;
                     p.x = Math.random() * 500;
                     p.y = Math.random() * 500;
-                    p.onGround = false;
                 }
                 self.toRemove = true;
             }

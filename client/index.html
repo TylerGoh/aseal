@@ -1,4 +1,5 @@
 <!-- #region initialization -->
+<title>Aki Sora is the best!</title>
 <link rel="stylesheet" type="text/css" href="/client/style.css">
 <link rel="icon" type="image/png" sizes="32x32" href="/client/favicon/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="96x96" href="/client/favicon/favicon-96x96.png">
@@ -247,7 +248,7 @@
 		self.startFrame = 1.0;
 		self.endFrame = 4.0;
 		self.frameTime = 100;
-		self.direction = "left"
+		self.direction = 1;
 		self.animationOld = "idle"
 		self.combo = 0;
 		var textBuffer = document.createElement('canvas');
@@ -330,7 +331,7 @@
 			var height = 37;
 			var col = Math.floor(self.frame/framesPerRow);
 			var row = Math.floor(self.frame%framesPerRow);
-			if(self.direction == "left"){
+			if(self.direction == -1){
 			ctx.drawImage(Img.player_left,
 			(framesPerRow-row-1)*width , col*height, width, height,	
 				x - width, y - height, width*2.2, height*2.2);
