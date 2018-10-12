@@ -82,7 +82,7 @@ var SOCKET_LIST = {};
 //#region Object Entity
 var Entity = function (param) {
     var self = {
-        width: 33 * 2.2,
+        width: 16 * 2.2,
         height: 37 * 2.2,
         onGround:false,
         x: 2304,
@@ -190,7 +190,7 @@ var Entity = function (param) {
 
     
     self.collidePlatformLeft = function(tile_left){
-        if (self.getRight() < tile_left && self.getOldRight() <= tile_left) {
+        if (self.getRight() > tile_left && self.getOldRight() <= tile_left) {
             self.setRight(tile_left - 0.01);
             self.spdX = 0;
             return true; 
@@ -273,6 +273,14 @@ var Player = function (param) {
             self.queueAttack = true;
 
     }
+
+    self.death = function (){
+        self.hp = self.hpMax;
+        self.x = 2350;
+        self.y = Math.random() * 500;
+        self.onGround = false;
+    }
+
     self.damage = function () {
         console.log(self.combo);
         for (var i in Player.list) {
@@ -291,14 +299,13 @@ var Player = function (param) {
                     self.slam = false;
                 }
                 if (p.hp <= 0) {
-                    p.hp = p.hpMax;
-                    p.x = Math.random() * 500;
-                    p.y = Math.random() * 500;
-                    p.onGround = false;
+                    p.death();
                 }
             }
         }
     }
+
+
     self.getCollision = function (pt) {
         if ((pt.y + pt.height / 2) > self.y && (pt.y - pt.height) < self.y && (pt.x - self.x) * self.direction < 70 && (pt.x - self.x) * self.direction > -20)
             return true;
@@ -384,14 +391,10 @@ var Player = function (param) {
     self.updateSpd = function () {
         self.x_old = self.x;
         self.y_old = self.y;
-        if (self.y > 1450) {
-            self.y = 1450;
-            self.spdY = 0;
-            self.onGround = true;
-            if (self.slam == true) {
+            if (self.slam == true && self.onGround == true) {
                 self.damage();
             }
-        }
+        if (self.y > 2000) self.death();
         //gravity//
         self.spdY += self.gravity / refreshrate;
         if (self.pressingRight && self.stunDuration == 0)
