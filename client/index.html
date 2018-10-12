@@ -188,6 +188,8 @@
 	Img.map['forest'].src = '/client/img/map2.png';
 	Img.map['grass'] = new Image();
 	Img.map['grass'].src = '/client/img/grass.jpg';
+	Img.map['forest1'] = new Image();
+	Img.map['forest1'].src = '/client/img/forest1.png';
  //#endregion
 
  	//#region Text Caching
@@ -226,7 +228,7 @@
 		else
 			cam_x = Player.list[selfId].x - WIDTH/2;
 
-		cam_y = 1100 - HEIGHT;
+		cam_y = 1700 - HEIGHT;
 	}
  //#endregion
 
@@ -465,8 +467,6 @@
 		var y = -cam_y;
 		var multiplier = Math.floor(-x / 1200);
 		ctx.drawImage(Img.map[player.map], x, y);
-		ctx.drawImage(Img.map[player.map], x + 1600, y);
-		ctx.drawImage(Img.map[player.map], x - 1600, y);
 
 	}
  	//#endregion 
