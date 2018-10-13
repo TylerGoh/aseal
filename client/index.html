@@ -258,12 +258,15 @@
 		var fontSize = 20;
 		var fontFamily = 'Courier-New';
 		var m = measureText(text, fontSize, fontFamily);
-		textBuffer.width = m.width;
+		textBuffer.width = m.width+20;
 		textBuffer.height = m.height;
 		var temp = textBuffer.getContext('2d');
 		temp.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
 		temp.textBaseline = 'middle';
-		temp.fillText(text, 0, m.height / 2 - 2);
+		temp.fillStyle="rgba(0,0,0,0.6)";
+		temp.fillRect(0,0,m.width+20,m.height)
+		temp.fillStyle='white';
+		temp.fillText(text, 10, m.height / 2 - 2);
 		//#endregion
 	
 	//#region Object Player Animation
@@ -325,7 +328,7 @@
 			ctx.fillStyle = 'red';
 			ctx.fillRect(x - hpWidth / 2, y - 40, hpWidth, 4);
 			//name
-			ctx.drawImage(textBuffer, x - (m.width / 2), y + 40);
+			ctx.drawImage(textBuffer, x - (m.width / 2) - 10, y + 50);
 			//sprite
 			var framesPerRow = 7;
 			var numberOfRows= 16;

@@ -136,34 +136,33 @@ var Entity = function (param) {
     self.setRight = function (x) { self.x = x - self.width; }
     self.setTop = function (y) { self.y = y; }
     //#endregion
+    //#region Collision
     self.collision = function () {
-        console.log(map.layout[self.map].length);
         var bottom, left, right, top, value;
         //top left
         top    = Math.floor(self.getTop()    / tilesize);
         left   = Math.floor(self.getLeft()   / tilesize);
         value  = map.layout[self.map][top * map.columns[self.map] + left];
         self.collisionRouter(value, left * tilesize, top * tilesize, tilesize);
-        console.log(value + " top left");
+
 
         //top right
         top    = Math.floor(self.getTop()    / tilesize);
         right   = Math.floor(self.getRight()   / tilesize);
         value  = map.layout[self.map][top * map.columns[self.map] + right];
         self.collisionRouter(value, right * tilesize, top * tilesize, tilesize);
-        console.log(value + " top right");
+
         //bottom left
         bottom    = Math.floor(self.getBottom()    / tilesize);
         left   = Math.floor(self.getLeft()   / tilesize);
         value  = map.layout[self.map][bottom * map.columns[self.map] + left];
         self.collisionRouter(value, left * tilesize, bottom * tilesize, tilesize);
-        console.log(value + " bottom right");
         //bottom right
         bottom    = Math.floor(self.getBottom()    / tilesize);
         right   = Math.floor(self.getRight()   / tilesize);
         value  = map.layout[self.map][bottom * map.columns[self.map] + right];
         self.collisionRouter(value, right * tilesize, bottom * tilesize, tilesize);
-        console.log(value + " bottom left");
+
 
     }
 
@@ -211,8 +210,6 @@ var Entity = function (param) {
     }
 
     self.collidePlatformTop = function(tile_top){
-        console.log(tile_top);
-        console.log(self.getBottom());
         if (self.getBottom() > tile_top && self.getOldBottom() <= tile_top) {
             self.setBottom(tile_top - 1);
             self.spdY = 0;
@@ -223,7 +220,7 @@ var Entity = function (param) {
     }
 
     return self;
-
+    //#endregion
 };
 //#endregion
 
@@ -285,7 +282,6 @@ var Player = function (param) {
     }
 
     self.damage = function () {
-        console.log(self.combo);
         for (var i in Player.list) {
             var p = Player.list[i];
             if (self.map === p.map && self.getCollision(p) === true && self.id !== p.id) {
