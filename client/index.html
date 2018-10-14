@@ -227,8 +227,11 @@
 		}
 		else
 			cam_x = Player.list[selfId].x - WIDTH/2;
-
-		cam_y = 1700 - HEIGHT;
+		
+			if (Player.list[selfId].y< 1700 - HEIGHT * 0.8) 
+				cam_y = Player.list[selfId].y - (HEIGHT * 0.2);
+			else
+			cam_y = 1700 - HEIGHT;
 	}
  //#endregion
 

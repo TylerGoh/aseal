@@ -6,7 +6,7 @@ var app = express();
 var serv = require('http').Server(app);
 const client = new MongoClient(url, { useNewUrlParser: true });
 var account;
-var refreshrate = 100;
+var refreshrate = 50;
 var map = {};
 map.layout = {};
 map.columns = {};
@@ -666,6 +666,7 @@ io.sockets.on('connection', function (socket) {
 
 var initPack = { player: [], bullet: [] };
 var removePack = { player: [], bullet: [] };
+var updatePack = {};
 //#endregion
 
 
@@ -675,6 +676,7 @@ setInterval(function () {
         player: Player.update(),
         bullet: Bullet.update()
     };
+    updatePack = pack;
     for (var i in SOCKET_LIST) {
         var socket = SOCKET_LIST[i];
         socket.emit('init', initPack);
@@ -688,7 +690,6 @@ setInterval(function () {
 
 }, 1000 / refreshrate);
 //#endregion
-
 
 
 
