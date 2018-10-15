@@ -423,9 +423,6 @@ Player.onConnect = function (socket, username) {
         username: username
 
     });
-    for (var i in SOCKET_LIST) {
-        var socket = SOCKET_LIST[i];
-        socket.emit('init', initPack);}
     socket.on('keyPress', function (data) {
         if (data.inputId === 'left')
             player.pressingLeft = data.state;
@@ -642,6 +639,7 @@ setInterval(function () {
     updatePack = pack;
     for (var i in SOCKET_LIST) {
         var socket = SOCKET_LIST[i];
+        socket.emit('init', initPack);
         socket.emit('update', pack);
         socket.emit('remove', removePack);
     }
