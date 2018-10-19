@@ -7,7 +7,8 @@ var app = express();
 var serv = require('http').Server(app);
 const client = new MongoClient(url, { useNewUrlParser: true });
 var account;
-var refreshrate = 50;
+var refreshrate = 100;
+var updaterate = 50;
 var read = fs.readFileSync('maps/maps.json')
 var map = JSON.parse(read);
 var tilesize = 48;
@@ -201,6 +202,8 @@ var Player = function (param) {
     self.isAttacking = false;
     self.slam = false;
     self.stunDuration = 0;
+    self.x = map.spawn_x[self.map];
+    self.y = map.spawn_y[self.map];
     var super_update = self.update;
     //#endregion
     //#region Player:Attack
@@ -223,11 +226,34 @@ var Player = function (param) {
     }
 
     self.changeMap = function(mapid){
+        var socket = SOCKET_LIST[self.id];
+        for (var i in LocalPlayer[self.map]) {
+            var socket2 = SOCKET_LIST[i];
+            socket2.emit('removeone', self.id);
+        }
+        delete LocalPlayer[self.map][self.id];
         self.map = mapid;
+        if (LocalPlayer[self.map] === undefined)
+        {
+        LocalPlayer[self.map] = [];
+        }
+        LocalPlayer[self.map][self.id] = self;
+        socket.emit('changeMapSelf', {
+            selfmap: mapid,
+            player: Player.getAllInitPack(mapid),
+        });
+        for (var i in LocalPlayer[mapid]) {
+            var socket2 = SOCKET_LIST[i];
+            socket2.emit('changeMapOthers', {
+                player: self
+            });
+        }
+        
+        
+        
         self.x = map.spawn_x[mapid];
         self.y = map.spawn_y[mapid];
-        var socket = SOCKET_LIST[self.id]
-        socket.emit('changeMap', mapid);
+
     }
 
     self.death = function () {
@@ -400,7 +426,11 @@ var Player = function (param) {
     };
 
     Player.list[self.id] = self;
-
+    if (LocalPlayer[self.map] === undefined)
+    {
+    LocalPlayer[self.map] = [];
+    }
+    LocalPlayer[self.map][self.id] = self;
     initPack.player.push(self.getInitPack());
     return self;
     //#endregion
@@ -409,6 +439,7 @@ var Player = function (param) {
 
 
 //#region Player Data Input
+LocalPlayer = {};
 Player.list = {};
 Player.onConnect = function (socket, username) {
     var listCount = 0;
@@ -416,7 +447,7 @@ Player.onConnect = function (socket, username) {
         listCount++;
     console.log(listCount + " people currently in server");
     //checking
-    var map = 'forest1';
+    var map = 'forest3';
     var player = Player({
         id: socket.id,
         map: map,
@@ -446,30 +477,41 @@ Player.onConnect = function (socket, username) {
 
     socket.emit('init', {
         selfId: socket.id,
-        player: Player.getAllInitPack(),
+        player: Player.getAllInitPack('forest3'),
         bullet: Bullet.getAllInitPack()
     });
 };
-Player.getAllInitPack = function () {
+Player.getAllInitPack = function (maps) {
     var players = [];
-    for (var i in Player.list)
+    for (var i in LocalPlayer[maps])
         players.push(Player.list[i].getInitPack());
     return players;
 };
 
 Player.onDisconnect = function (socket) {
+    if (Player.list[socket.id].map != undefined)
+    {
+    var temp = Player.list[socket.id].map;
+    delete LocalPlayer[temp][socket.id];
+    }
     delete Player.list[socket.id];
     removePack.player.push(socket.id);
 };
 Player.update = function () {
-    var pack = [];
     for (var i in Player.list) {
         var player = Player.list[i];
         player.update();
+    }
+};
+
+Player.getPack = function(maps){
+    var pack = [];
+    for (var i in LocalPlayer[maps]) {
+        var player = LocalPlayer[maps][i];
         pack.push(player.getUpdatePack());
     }
     return pack;
-};
+}
 //#endregion
 
 
@@ -632,12 +674,14 @@ var updatePack = {};
 
 //#region Pulse
 setInterval(function () {
+    for (var map in LocalPlayer)
+    {
     var pack = {
-        player: Player.update(),
+        player: Player.getPack(map),
         bullet: Bullet.update()
     };
     updatePack = pack;
-    for (var i in SOCKET_LIST) {
+    for (var i in LocalPlayer[map]) {
         var socket = SOCKET_LIST[i];
         socket.emit('init', initPack);
         socket.emit('update', pack);
@@ -647,6 +691,11 @@ setInterval(function () {
     initPack.bullet = [];
     removePack.player = [];
     removePack.bullet = [];
+    }
+}, 1000 / updaterate);
+
+setInterval(function () {
+    Player.update();
 
 }, 1000 / refreshrate);
 //#endregion

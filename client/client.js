@@ -158,6 +158,7 @@ Img.map['forest1'] = new Image();
 Img.map['forest1'].src = '/client/img/forest1.png';
 Img.map['forest2'] = new Image();
 Img.map['forest2'].src = '/client/img/forest2.png';
+Img.map['forest3'] = Img.map['forest2'];
 //#endregion
 
 //#region Text Caching
@@ -366,13 +367,15 @@ socket.on('init', function (data) {
     for (var i = 0; i < data.player.length; i++) {
         new Player(data.player[i]);
     }
-    for (var i = 0; i < data.bullet.length; i++) {
+    /*for (var i = 0; i < data.bullet.length; i++) {
         new Bullet(data.bullet[i]);
-    }
+    }*/
 });
+
 
 socket.on('update', function (data) {
     //{ player : [{id:123,x:0,y:0},{id:1,x:0,y:0}], bullet: []}
+
     for (var i = 0; i < data.player.length; i++) {
         var pack = data.player[i];
         var p = Player.list[pack.id];
@@ -416,14 +419,25 @@ socket.on('remove', function (data) {
     }
 });
 
-socket.on('changeMap', function (data) {
-    Player.list[selfId].map = data
+socket.on('removeone',function(data){
+    delete Player.list[data]
+});
+
+socket.on('changeMapSelf', function (data) {
+    Player.list = [];
+    for (var i = 0; i < data.player.length; i++) {
+        new Player(data.player[i]);
+    }
+});
+
+socket.on('changeMapOthers', function (data) {
+    new Player(data.player);
 });
 //#endregion
 
 //#region Update
 setInterval(function () {
-    if (!selfId)
+    if (!selfId || Player.list[selfId] === undefined)
         return;
     ctx.clearRect(0, 0, WIDTH, HEIGHT);
     updateCamera();
