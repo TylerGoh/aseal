@@ -482,6 +482,9 @@ document.onkeydown = function (event) {
         else if (event.keyCode === 87 || event.keyCode === 32) // w
             socket.emit('keyPress', { inputId: 'up', state: true });
         else if (event.keyCode === 13) {
+            if (signedin == false)
+            signDivSignIn.onclick();
+            else
             chatInput.focus();
         }
 
