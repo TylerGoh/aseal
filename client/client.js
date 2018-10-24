@@ -473,14 +473,16 @@ document.onkeydown = function (event) {
 
     if (chatInput != document.activeElement) {
         // Invalid... Box is empty
-        if (event.keyCode === 68)	//d
+        if (event.keyCode === 39)	//d
             socket.emit('keyPress', { inputId: 'right', state: true });
-        else if (event.keyCode === 83)	//s
+        else if (event.keyCode === 40)	//s
             socket.emit('keyPress', { inputId: 'down', state: true });
-        else if (event.keyCode === 65) //a
+        else if (event.keyCode === 37) //a
             socket.emit('keyPress', { inputId: 'left', state: true });
-        else if (event.keyCode === 87 || event.keyCode === 32) // w
+        else if (event.keyCode === 38 || event.keyCode === 32) // w
             socket.emit('keyPress', { inputId: 'up', state: true });
+        else if (event.keyCode === 67) // c
+        socket.emit('keyPress', { inputId: 'attack', state: true });
         else if (event.keyCode === 13) {
             if (signedin == false)
             signDivSignIn.onclick();
@@ -494,14 +496,16 @@ document.onkeydown = function (event) {
 }
  
 document.onkeyup = function (event) {
-    if (event.keyCode === 68)	//d
+    if (event.keyCode === 39)	//d
         socket.emit('keyPress', { inputId: 'right', state: false });
-    else if (event.keyCode === 83)	//s
+    else if (event.keyCode === 40)	//s
         socket.emit('keyPress', { inputId: 'down', state: false });
-    else if (event.keyCode === 65) //a
+    else if (event.keyCode === 37) //a
         socket.emit('keyPress', { inputId: 'left', state: false });
-    else if (event.keyCode === 87 || event.keyCode === 32) // w
+    else if (event.keyCode === 38 || event.keyCode === 32) // w
         socket.emit('keyPress', { inputId: 'up', state: false });
+    else if (event.keyCode === 67 || event.keyCode === 67) // c
+        socket.emit('keyPress', { inputId: 'attack', state: false });
 
 }
 

@@ -20,7 +20,7 @@ client.connect(function (err) {
 });
 
 
-app.get('/', function (req, res) {
+app.get('/rpg', function (req, res) {
     res.sendFile(__dirname + '/client/index.html');
 });
 app.use('/client', express.static(__dirname + '/client'));
@@ -447,7 +447,7 @@ Player.onConnect = function (socket, username) {
         listCount++;
     console.log(listCount + " people currently in server");
     //checking
-    var map = 'forest3';
+    var map = 'forest1';
     var player = Player({
         id: socket.id,
         map: map,
