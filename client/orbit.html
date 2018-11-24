@@ -1,0 +1,215 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+        overflow-y: hidden;
+    overflow-x: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="position:absolute; top:0px; left:0px; z-index: 1;">
+        X:<input id="nX" type="text" value="5000"><br>
+        Y:<input id="nY" type="text" value="5000"><br>
+        VX:<input id="nVX" type="text" value="0"><br>
+        VY:<input id="nVY" type="text" value="0"><br>
+        Mass:<input id="nMass" type="text" value="10000"><br>
+        Radius:<input id="nRadius" type="text"value="100"><br>
+        Colour:  <select id="nColour">
+            <option value="Red">Red</option>
+            <option value="Blue">Blue</option>
+            <option value="Black">Black</option>
+            <option value="White">White</option>
+          </select><br> 
+        <button id="create" onclick = "create();">Create</button><br><br>
+
+        Time: <br><input id="nSpeed" type="text" value="10" onchange="Speed()"><br><br>
+        Pause: <input type="checkbox" id="paused"><br>
+        Trace: <input type="checkbox" id="trace"><br>
+
+
+
+        Zoom:<label id="slide2">x1</label><br>
+
+
+          
+      
+    </div>
+    <div id='d1' style="position:absolute; top:0px; left:0px;">  
+    <canvas id="myCanvas" width="5000" height="5000" ></canvas>
+    </div>
+    <script>
+      var canvas = document.getElementById('myCanvas');
+      var create = document.getElementById('create');
+      var ctx = canvas.getContext('2d');
+      var G = -1;
+      var l = 0;
+      var input = {};
+      var speed = 10;
+      var magnify = 10;
+      var cam_x = 0;
+      var cam_y = 0;
+      var drag = false;
+      var mousex = 0;
+      var mousey = 0;
+      var dragx = 0;
+      var dragy = 0;
+      input.X = document.getElementById('nX');
+      input.Y = document.getElementById('nY');
+      input.VX = document.getElementById('nVX');
+      input.VY = document.getElementById('nVY');
+      input.Mass = document.getElementById('nMass');
+      input.Colour = document.getElementById('nColour');
+      input.Radius = document.getElementById('nRadius');
+      input.Speed = document.getElementById('nSpeed');
+      input.paused = document.getElementById('paused');
+      input.trace = document.getElementById('trace');
+
+window.addEventListener("wheel", event => {
+    const delta = Math.sign(event.wheelDelta);
+    magnify += delta;
+    cam_x += event.clientX*delta*0.1;
+    cam_y += event.clientY*delta*0.1;
+    document.getElementById('slide2').innerHTML = "x" + magnify/10;
+});
+
+document.onmousedown = function (event) {
+    dragx = event.clientX;
+    dragy = event.clientY;
+    drag = true;
+}
+
+document.onmouseup = function (event) {
+    drag = false;
+}
+
+Speed = function() {
+  speed = parseFloat(input.Speed.value);
+  if (speed<1)
+  speed = 1;
+}
+
+
+var create = function(){
+  new Player({
+  x:parseFloat(input.X.value),
+  y:parseFloat(input.Y.value),
+  vx:parseFloat(input.VX.value),
+  vy:parseFloat(input.VY.value),
+  mass:parseFloat(input.Mass.value),
+  radius:parseFloat(input.Radius.value),
+  color:input.Colour.value
+
+});
+
+}
+
+var Player = function(init){
+  var self={}
+  self.l = l;
+  self.x = init.x;
+  self.y = init.y;
+  self.vx = init.vx;
+  self.vy = init.vy;
+  self.mass = init.mass;
+  if (init.color === undefined)
+  self.color = "green"
+  else
+  self.color = init.color;
+  self.ax = 0;
+  self.ay = 0;
+  self.radius = init.radius;
+
+
+  self.draw = function(){
+    ctx.beginPath();
+    ctx.arc(self.x*magnify/100 - cam_x, self.y*magnify/100 - cam_y, self.radius*magnify/100, 0, 2 * Math.PI, false);
+    ctx.fillStyle = self.color;
+    ctx.fill();
+  }
+
+  self.gravity = function(){
+    self.ay = 0;
+    self.ax = 0;  
+    
+    for (var i in Player.list)
+    {
+      if(Player.list[i]!= self)
+      {
+      var p = Player.list[i];
+      var h = Math.sqrt(Math.pow(self.x-p.x,2)+Math.pow(self.y-p.y,2));
+      var force = G*self.mass*p.mass/(h*h);
+      self.ax += force * ((self.x-p.x)/h) / self.mass;
+      self.ay += force * ((self.y-p.y)/h) / self.mass;
+      }
+    }
+    self.vx += self.ax;
+    self.vy += self.ay;
+  }
+  self.update = function(){
+    self.x += self.vx;
+    self.y += self.vy;
+  }
+  Player.list[l] = self;
+  l++;
+
+}
+
+Player.list = {};
+
+
+
+      
+setInterval(function(){
+  if(input.trace.checked == false)
+ ctx.clearRect(0,0,5000,5000);
+for(x=0;x<speed;x++)
+{
+for (var i in Player.list)
+{
+  Player.list[i].draw();
+  if (input.paused.checked == false)
+  Player.list[i].gravity();
+
+}
+for (var i in Player.list)
+{
+  if (input.paused.checked == false)
+  Player.list[i].update();
+}
+}
+},10);
+
+document.onmousemove = function (event) {
+  mousex = event.clientX;
+  mousey = event.clientY;
+  if(drag == true){
+  cam_x -= (event.clientX - dragx);
+  cam_y -= (event.clientY - dragy);
+  dragx = event.clientX;
+  dragy = event.clientY;
+}
+}
+
+
+document.onkeydown = function (event) {
+    if (event.keyCode === 67)
+    {
+      new Player({
+  x:(mousex + cam_x)/(magnify/100),
+  y:(mousey + cam_y)/(magnify/100),
+  vx:parseFloat(input.VX.value),
+  vy:parseFloat(input.VY.value),
+  mass:parseFloat(input.Mass.value),
+  radius:parseFloat(input.Radius.value),
+  color:input.Colour.value
+
+});
+}
+}
+    </script>
+  </body>
+</html>  

@@ -23,6 +23,9 @@ client.connect(function (err) {
 app.get('/rpg', function (req, res) {
     res.sendFile(__dirname + '/client/index.html');
 });
+app.get('/orbit', function (req, res) {
+    res.sendFile(__dirname + '/client/orbit.html');
+});
 app.use('/client', express.static(__dirname + '/client'));
 
 serv.listen(80);
@@ -489,11 +492,13 @@ Player.getAllInitPack = function (maps) {
 };
 
 Player.onDisconnect = function (socket) {
-    if (Player.list[socket.id].map != undefined)
-    {
-    var temp = Player.list[socket.id].map;
-    delete LocalPlayer[temp][socket.id];
-    }
+    try{
+        var temp = Player.list[socket.id].map;
+        delete LocalPlayer[temp][socket.id];
+     }catch(e){
+        console.log("YO",e)
+     }
+    
     delete Player.list[socket.id];
     removePack.player.push(socket.id);
 };
