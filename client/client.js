@@ -9,12 +9,18 @@ var b_lockscreen = document.getElementById("lockscreen");
 var WIDTH = window.innerWidth - 8;
 var HEIGHT = window.innerHeight - 2;
 var socket = io();
+var lockscreen = false;
 var elem = document.documentElement;
 var togglescreen = false;
 var cam_y = 0;
 var cam_x = 0;
 var signedin = false;
 var refreshrate = 100;
+var chatText = document.getElementById('chat-text');
+var chatInput = document.getElementById('chat-input');
+var chatForm = document.getElementById('chat-form');
+chatText.style.width = -2 + WIDTH/8;
+chatInput.style.width = 2+ WIDTH/8;
 function Warning(text){
     warning.innerHTML = '<div>' + text + '</div>';
 }
@@ -71,6 +77,8 @@ window.onload = window.onresize = function () {
     canvas.height = window.innerHeight;
     WIDTH = window.innerWidth;
     HEIGHT = window.innerHeight;
+    chatText.style.width = -2+WIDTH/4;
+    chatInput.style.width = 2+ WIDTH/4;
 }
 //#endregion
 
@@ -113,9 +121,7 @@ socket.on('signUpResponse', function (data) {
 //#endregion
 
 //#region Chat
-var chatText = document.getElementById('chat-text');
-var chatInput = document.getElementById('chat-input');
-var chatForm = document.getElementById('chat-form');
+
 
 socket.on('addToChat', function (data) {
     chatText.innerHTML += '<div>' + data + '</div>';
@@ -146,6 +152,8 @@ Img.player_right = new Image();
 Img.player_right.src = '/client/img/player-right.png';
 Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
+Img.bottom = new Image();
+Img.bottom.src = '/client/img/BottomBar.png'
 
 Img.map = {};
 Img.map['field'] = new Image();
@@ -213,9 +221,14 @@ var Player = function (initPack) {
     self.y = initPack.y;
     self.hp = initPack.hp;
     self.hpMax = initPack.hpMax;
+    self.mp = initPack.mp;
+    self.mpMax = initPack.mpMax;
+    self.xp = initPack.xp;
+    self.xpMax = initPack.xpMax;
     self.score = initPack.score;
     self.map = initPack.map;
     self.username = initPack.username;
+    self.level = initPack.level;
     self.counter = 0;
     self.frame = 0;
     self.animation = "idle";
@@ -238,7 +251,24 @@ var Player = function (initPack) {
     temp.fillStyle="rgba(0,0,0,0.6)";
     temp.fillRect(0,0,m.width+20,m.height)
     temp.fillStyle='white';
-    temp.fillText(text, 10, m.height / 2 - 2);
+    temp.fillText(text, 10, m.height / 2);
+
+    if(self.id == selfId)
+    {
+        levelBuffer = document.createElement('canvas');
+        let text = "Lvl: " + self.level;
+        var fontSize = 20;
+        var fontFamily = 'Courier-New';
+        m2 = measureText(text, fontSize, fontFamily);
+        levelBuffer.width = m2.width+20;
+        levelBuffer.height = m2.height;
+        var temp2 = levelBuffer.getContext('2d');
+        temp2.font = fontSize + 'px/' + fontSize + 'px ' + fontFamily;
+        temp2.textBaseline = 'middle';
+        temp2.fillStyle='white';
+        temp2.fillText(text, 10, m2.height / 2);
+    }
+
     //#endregion
 
 //#region Object Player Animation
@@ -301,7 +331,6 @@ var Player = function (initPack) {
         ctx.drawImage(textBuffer, x - (m.width / 2) - 10, y + 50);
         //sprite
         var framesPerRow = 7;
-        var numberOfRows= 16;
         var width = 50;
         var height = 37;
         var col = Math.floor(self.frame/framesPerRow);
@@ -357,6 +386,16 @@ var Bullet = function (initPack) {
 Bullet.list = {};
 //#endregion
 
+//#region Inventory
+
+var inventory = new Inventory(null);
+socket.on('updateInventory',function(items){
+    inventory.items = items;
+    inventory.refreshRender();
+})
+
+//#endregion
+
 //#region Packets
 var selfId = null;
 
@@ -394,6 +433,10 @@ socket.on('update', function (data) {
                 p.direction = pack.direction;
             if (pack.combo !== undefined)
                 p.combo = pack.combo;
+            if (pack.mp !== undefined)
+                p.mp = pack.mp;
+            if (pack.xp !== undefined)
+                p.xp = pack.xp;
                 
         }
     }
@@ -435,6 +478,28 @@ socket.on('changeMapOthers', function (data) {
 });
 //#endregion
 
+//#region UI
+
+
+var drawUI = function(){
+    let ratio = WIDTH/Img.bottom.width*0.5;
+    let health = Player.list[selfId].hp/Player.list[selfId].hpMax;
+    let mana = Player.list[selfId].mp/Player.list[selfId].mpMax;
+    let xp = Player.list[selfId].xp/Player.list[selfId].xpMax;
+    let height = Img.bottom.height*WIDTH/Img.bottom.width*0.5;
+    ctx.drawImage(Img.bottom,0,0,Img.bottom.width,Img.bottom.height,WIDTH/4,HEIGHT-height,WIDTH/2,height);
+    ctx.fillStyle = "red";
+    ctx.fillRect(WIDTH/4 + ratio*8,HEIGHT-148*ratio,320*ratio*health,26*ratio);
+    ctx.fillStyle = "blue";
+    ctx.fillRect(WIDTH/4 + ratio*482,HEIGHT-148*ratio,320*ratio*mana,26*ratio);
+    ctx.fillStyle = "yellow";
+    ctx.fillRect(WIDTH/4 + ratio*8,HEIGHT-110*ratio,794*ratio*xp,22*ratio);
+    ctx.drawImage(levelBuffer, WIDTH/4 + 397*ratio - (m2.width / 2), HEIGHT-146*ratio);
+}
+
+
+//#endregion
+
 //#region Update
 setInterval(function () {
     if (!selfId || Player.list[selfId] === undefined)
@@ -443,6 +508,7 @@ setInterval(function () {
     updateCamera();
     drawMap();
     drawScore();
+    drawUI();
     for (var i in Player.list)
         Player.list[i].update();
     for (var i in Bullet.list)
@@ -455,7 +521,6 @@ var drawMap = function () {
     var player = Player.list[selfId];
     var x = -cam_x;
     var y = -cam_y;
-    var multiplier = Math.floor(-x / 1200);
     ctx.drawImage(Img.map[player.map], x, y-40);
 
 }
@@ -473,13 +538,13 @@ document.onkeydown = function (event) {
 
     if (chatInput != document.activeElement) {
         // Invalid... Box is empty
-        if (event.keyCode === 39)	//d
+        if (event.keyCode === 68)	//d
             socket.emit('keyPress', { inputId: 'right', state: true });
-        else if (event.keyCode === 40)	//s
+        else if (event.keyCode === 83)	//s
             socket.emit('keyPress', { inputId: 'down', state: true });
-        else if (event.keyCode === 37) //a
+        else if (event.keyCode === 65) //a
             socket.emit('keyPress', { inputId: 'left', state: true });
-        else if (event.keyCode === 38 || event.keyCode === 32) // w
+        else if (event.keyCode === 87 || event.keyCode === 32) // w
             socket.emit('keyPress', { inputId: 'up', state: true });
         else if (event.keyCode === 67) // c
         socket.emit('keyPress', { inputId: 'attack', state: true });
@@ -496,13 +561,13 @@ document.onkeydown = function (event) {
 }
  
 document.onkeyup = function (event) {
-    if (event.keyCode === 39)	//d
+    if (event.keyCode === 68)	//d
         socket.emit('keyPress', { inputId: 'right', state: false });
-    else if (event.keyCode === 40)	//s
+    else if (event.keyCode === 83)	//s
         socket.emit('keyPress', { inputId: 'down', state: false });
-    else if (event.keyCode === 37) //a
+    else if (event.keyCode === 65) //a
         socket.emit('keyPress', { inputId: 'left', state: false });
-    else if (event.keyCode === 38 || event.keyCode === 32) // w
+    else if (event.keyCode === 87 || event.keyCode === 32) // w
         socket.emit('keyPress', { inputId: 'up', state: false });
     else if (event.keyCode === 67 || event.keyCode === 67) // c
         socket.emit('keyPress', { inputId: 'attack', state: false });
