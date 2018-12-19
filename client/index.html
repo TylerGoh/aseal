@@ -16,11 +16,10 @@
 </div>
 
 <script src="/client/socket.js"></script>
-<div id="gameDiv" style="display:none;">
+<div id="gameDiv" style="display:none; z-index: -1">
 	<canvas id="ctx" width="50" height="50" style="border:1px solid #000000;"></canvas>
 
 	<div id="chat-text" class="chatText"></div>
-	<div id="inventory"></div>
 	<form id="chat-form">
 		<input id="chat-input" type="text" autocomplete="off" class="chatForm">
 	</form>
@@ -28,7 +27,15 @@
 	<button class="button" style="bottom:15px;right:120px;" id="lockscreen" onclick="Lockscreen();">Lockscreen</button>
 
 </div>
+<div id="inventoryDiv" style="display:none;">
+	<canvas id="invCanvas" width="274" height="424" style="position:absolute; top:0px; left:0px;"></canvas>
+</div>
+<div id="spellDiv" style="display:none;">
+	<canvas id="spellCanvas" width="274" height="424" style="position:absolute; top:0px; left:274px;"></canvas>
+</div>
 <!-- #endregion -->
 	<script src="/client/Inventory.js"></script>
 	<script src="/client/client.js"></script>
+	<script src="/client/InventoryUI.js"></script>
+	<script src="/client/SpellUI.js"></script>
 	

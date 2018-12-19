@@ -39,8 +39,6 @@ Player.list = {};
 //#endregion 
 
 
-
-
 //#region Login and Logout
 var isValidPassword = function (data, cb) {
     account.find({ username: data.username, password: data.password }).toArray(function (err, res) {

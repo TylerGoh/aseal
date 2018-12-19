@@ -142,7 +142,6 @@ Entity = function (param) {
 //#endregion
 
 
-
 //#region Player:Entity
 Player = function (param) {
     //#region Player:Initialization

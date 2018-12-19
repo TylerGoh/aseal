@@ -75,6 +75,7 @@ window.onload = window.onresize = function () {
 
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    
     WIDTH = window.innerWidth;
     HEIGHT = window.innerHeight;
     chatText.style.width = -2+WIDTH/4;
@@ -154,6 +155,10 @@ Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
 Img.bottom = new Image();
 Img.bottom.src = '/client/img/BottomBar.png'
+Img.inventory = new Image();
+Img.inventory.src = '/client/img/Inventory.png'
+Img.spell = new Image();
+Img.spell.src = '/client/img/Spells.png'
 
 Img.map = {};
 Img.map['field'] = new Image();
@@ -481,6 +486,7 @@ socket.on('changeMapOthers', function (data) {
 //#region UI
 
 
+
 var drawUI = function(){
     let ratio = WIDTH/Img.bottom.width*0.5;
     let health = Player.list[selfId].hp/Player.list[selfId].hpMax;
@@ -509,6 +515,8 @@ setInterval(function () {
     drawMap();
     drawScore();
     drawUI();
+    InventoryUI();
+    SpellUI();
     for (var i in Player.list)
         Player.list[i].update();
     for (var i in Bullet.list)
@@ -546,8 +554,21 @@ document.onkeydown = function (event) {
             socket.emit('keyPress', { inputId: 'left', state: true });
         else if (event.keyCode === 87 || event.keyCode === 32) // w
             socket.emit('keyPress', { inputId: 'up', state: true });
-        else if (event.keyCode === 67) // c
-        socket.emit('keyPress', { inputId: 'attack', state: true });
+        else if (event.keyCode === 73) // c
+        {
+            if(document.getElementById("inventoryDiv").style.display == "inline-block")
+            document.getElementById("inventoryDiv").style.display = "none";
+            else
+            document.getElementById("inventoryDiv").style.display = "inline-block";
+        }
+        else if (event.keyCode === 79) // c
+        {
+            if(document.getElementById("spellDiv").style.display == "inline-block")
+            document.getElementById("spellDiv").style.display = "none";
+            else
+            document.getElementById("spellDiv").style.display = "inline-block";
+        }
+
         else if (event.keyCode === 13) {
             if (signedin == false)
             signDivSignIn.onclick();
@@ -574,17 +595,20 @@ document.onkeyup = function (event) {
 
 }
 
-document.onmousedown = function (event) {
+canvas.onmousedown = function (event) {
     socket.emit('keyPress', { inputId: 'attack', state: true });
 }
 document.onmouseup = function (event) {
     socket.emit('keyPress', { inputId: 'attack', state: false });
 }
+
+mousex = 0;
+mousey = 0;
 document.onmousemove = function (event) {
     if (signedin === true) {
-        var x = cam_x - Player.list[selfId].x + event.clientX - 8;
-        var y = cam_y - Player.list[selfId].y + event.clientY - 8;
-        var angle = Math.atan2(y, x) / Math.PI * 180;
+        mousex = cam_x - Player.list[selfId].x + event.clientX - 8;
+        mousey = cam_y - Player.list[selfId].y + event.clientY - 8;
+        var angle = Math.atan2(mousey, mousex) / Math.PI * 180;
         socket.emit('keyPress', { inputId: 'mouseAngle', state: angle });
     }
 }
