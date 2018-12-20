@@ -24,6 +24,8 @@ spell_canvas.onmousedown = function (event) {
             }
             else
             {
+            document.getElementById("invCanvas").style.zIndex = 1;
+            document.getElementById("spellCanvas").style.zIndex = 2;    
             spell_x_old = spell_x;
             spell_y_old = spell_y;
             hold2x = event.clientX;
