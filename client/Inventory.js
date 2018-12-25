@@ -47,8 +47,6 @@ Inventory = function(socket){
 			let onclick = "Item.List['" + item.id + "'].event()";
 			str += "<button onclick=\"" + onclick + "\">" + item.name + " x" + self.items[i].amount + "</button><br>";
 		}
-
-		document.getElementById("inventory").innerHTML = str;
 	}
 
 
